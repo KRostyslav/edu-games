@@ -1,0 +1,21 @@
+{
+  "name": "@edu/founder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Навчальна симуляція соло-розробника: бутстрап SaaS-продукту за 36 місяців",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "node --check src/main.js",
+    "simulate": "node scripts/simulate.mjs"
+  },
+  "dependencies": {
+    "@edu/pixel-ui": "workspace:*",
+    "@edu/sim-core": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^6.0.7"
+  }
+}

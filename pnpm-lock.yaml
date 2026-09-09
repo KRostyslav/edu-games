@@ -12,6 +12,19 @@ importers:
         specifier: ^2.3.3
         version: 2.10.12
 
+  apps/founder:
+    dependencies:
+      '@edu/pixel-ui':
+        specifier: workspace:*
+        version: link:../../packages/pixel-ui
+      '@edu/sim-core':
+        specifier: workspace:*
+        version: link:../../packages/sim-core
+    devDependencies:
+      vite:
+        specifier: ^6.0.7
+        version: 6.4.3
+
   apps/peppers:
     dependencies:
       '@edu/pixel-ui':

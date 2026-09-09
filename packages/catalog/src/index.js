@@ -14,6 +14,7 @@ import { assertCatalog } from "./validate.js";
 export const CATEGORIES = [
   { id: "nature", title: "Природа й агро" },
   { id: "tech", title: "Технічні" },
+  { id: "business", title: "Продукт і бізнес" },
   { id: "hobby", title: "Хобі" },
 ];
 
@@ -71,6 +72,23 @@ export const GAMES = [
     emoji: "🌶️",
     accent: "#b83a2a",
     devPort: 5182,
+  },
+  {
+    id: "founder",
+    dir: "apps/founder",
+    pkg: "@edu/founder",
+    title: "Свій продукт",
+    subtitle: "36 місяців соло: від ідеї до зарплати",
+    description:
+      "Піксельна навчальна гра про соло-розробника, який будує SaaS на бутстрапі: валідація, воронка, " +
+      "юніт-економіка, вигорання — від ідеї до моменту, коли продукт замінює зарплату.",
+    category: "business",
+    tags: ["Симуляція", "SaaS", "Бізнес", "Покрокова"],
+    status: "released",
+    released: "2026-09-09",
+    emoji: "🚀",
+    accent: "#c05a2a",
+    devPort: 5183,
   },
 ];
 

@@ -9,10 +9,12 @@
 import { PALETTE, clear, rect, dither, frame } from "@edu/pixel-ui";
 import { drawVineyard } from "./vineyard.js";
 import { drawPeppers } from "./peppers.js";
+import { drawFounder } from "./founder.js";
 
 const THUMBS = {
   vineyard: drawVineyard,
   peppers: drawPeppers,
+  founder: drawFounder,
 };
 
 /** Малювалка гри або `null`, якщо власної ще немає. */
