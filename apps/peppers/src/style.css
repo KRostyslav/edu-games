@@ -1,0 +1,1207 @@
+/*
+ * Стилі гри. Базова тема, кнопки, смужки, картки й модалки приходять із
+ * @edu/pixel-ui — тут лише те, чого там немає: розкладка балкона, таблиця
+ * порівняння, вкладки, хронологія розтину й звіт.
+ */
+
+/* ─────────────────────────────── Каркас ─────────────────────────────── */
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--paper-dark);
+  border-bottom: var(--px) solid var(--shadow);
+  flex-wrap: wrap;
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.topbar__title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.topbar__season {
+  font-size: 12px;
+  color: #6b5f4c;
+}
+
+.topbar__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar__weather {
+  font-size: 12px;
+  background: var(--paper);
+  border: 1px solid var(--shadow);
+  padding: 2px 8px;
+}
+
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(420px, 620px);
+  gap: 14px;
+  padding: 14px;
+  align-items: start;
+}
+
+/*
+ * На широкому екрані сцена й панель прокручуються незалежно, і кожна лишається
+ * в межах вікна. Без цього липкий підвал із бюджетом годин липне до низу вікна
+ * й перекриває картки дій, бо панель довша за екран.
+ */
+@media (min-width: 1101px) {
+  .layout {
+    height: calc(100vh - 50px);
+    overflow: hidden;
+  }
+
+  .scene,
+  .panel {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────────────────────────── Сцена ─────────────────────────────── */
+
+.scene {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scene .pixel-canvas {
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Підписи горщиків — у DOM, бо на канві текст не малюється. */
+.scene__legend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.scene__label {
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 2px;
+  background: var(--paper);
+  border: var(--px) solid var(--shadow);
+  cursor: pointer;
+}
+
+.scene__label[data-active="true"] {
+  background: var(--accent);
+  color: #fff6e0;
+}
+
+.scene__label[data-dead="true"] {
+  color: #8a8070;
+  background: var(--paper-deep);
+  text-decoration: line-through;
+}
+
+/* ─────────────────────────────── Панель ─────────────────────────────── */
+
+.panel {
+  background: var(--paper);
+  border: var(--px) solid var(--shadow);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel__header {
+  border-bottom: var(--px) solid var(--paper-deep);
+  padding-bottom: 10px;
+}
+
+.panel__month {
+  margin: 0 0 2px;
+  font-size: 18px;
+}
+
+.panel__phase {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.panel__phase-text {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+.panel__forecast {
+  margin: 8px 0 0;
+  font-size: 11px;
+  background: var(--paper-dark);
+  border: 1px solid var(--shadow);
+  padding: 4px 6px;
+}
+
+.panel__section-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b5f4c;
+}
+
+.panel__hint {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #6b5f4c;
+}
+
+.panel__empty {
+  margin: 0;
+  font-size: 12px;
+  grid-column: 1 / -1;
+}
+
+/* ─────────────────────────────── Балкон ─────────────────────────────── */
+
+.balcony__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 4px 12px;
+}
+
+.stat__optimum {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--shadow);
+}
+
+.balcony__equipment {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 2px 6px;
+  border: 1px solid var(--shadow);
+  background: var(--paper-deep);
+  color: #6b5f4c;
+}
+
+.chip[data-on="true"] {
+  background: var(--good);
+  color: #f2f7ee;
+}
+
+/* ─────────────────────── Таблиця порівняння ─────────────────────── */
+
+.compare {
+  overflow-x: auto;
+}
+
+.compare__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.compare__head,
+.compare__row-label,
+.compare__cell,
+.compare__corner {
+  border: 1px solid var(--shadow);
+  padding: 3px 5px;
+}
+
+.compare__row-label {
+  text-align: left;
+  font-weight: normal;
+  background: var(--paper-dark);
+  white-space: nowrap;
+}
+
+.compare__head {
+  background: var(--paper-dark);
+  padding: 0;
+}
+
+.compare__head[data-dead="true"] {
+  opacity: 0.6;
+}
+
+.compare__plant {
+  font: inherit;
+  font-size: 11px;
+  width: 100%;
+  padding: 4px 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.compare__plant:hover {
+  background: var(--paper);
+}
+
+.compare__plant-name {
+  font-weight: bold;
+}
+
+.compare__plant-note {
+  font-size: 10px;
+  color: #6b5f4c;
+}
+
+.compare__cell {
+  text-align: center;
+  background: var(--paper);
+}
+
+.compare__cell[data-tone="good"] {
+  background: #dcecd4;
+}
+
+.compare__cell[data-tone="warn"] {
+  background: #f2e2bc;
+}
+
+.compare__cell[data-tone="bad"] {
+  background: #efcdc4;
+  font-weight: bold;
+}
+
+.compare__cell[data-tone="dead"] {
+  background: var(--paper-deep);
+  color: #8a8070;
+}
+
+/* ─────────────────────────────── Вкладки ─────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  border-bottom: var(--px) solid var(--shadow);
+}
+
+.tabs__tab {
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 9px;
+  background: var(--paper-dark);
+  border: var(--px) solid var(--shadow);
+  border-bottom: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tabs__tab[data-active="true"] {
+  background: var(--paper);
+  position: relative;
+  top: var(--px);
+  font-weight: bold;
+}
+
+.tabs__tab[data-tone="warn"] .tabs__badge {
+  background: var(--warn);
+}
+
+.tabs__tab[data-tone="bad"] .tabs__badge {
+  background: var(--bad);
+  color: #fff6e0;
+}
+
+.tabs__tab[data-tone="dead"] {
+  color: #8a8070;
+}
+
+.tabs__badge {
+  font-size: 10px;
+  min-width: 14px;
+  text-align: center;
+  padding: 0 3px;
+  background: var(--paper-deep);
+  border: 1px solid var(--shadow);
+}
+
+.panel__tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─────────────────────────────── Рослина ─────────────────────────────── */
+
+.plant__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.plant__name {
+  margin: 0;
+  font-size: 15px;
+}
+
+.plant__species {
+  font-size: 11px;
+  font-style: italic;
+  color: #6b5f4c;
+}
+
+.plant__note {
+  margin: 0;
+  flex-basis: 100%;
+  font-size: 11px;
+}
+
+.plant__phase {
+  background: var(--paper-dark);
+  border: 1px solid var(--shadow);
+  padding: 7px 9px;
+}
+
+.plant__phase-title {
+  margin: 0 0 3px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.plant__phase-text {
+  margin: 0;
+  font-size: 11px;
+}
+
+.plant__risks {
+  border: var(--px) solid var(--warn);
+  padding: 8px 10px;
+  background: #f7edd8;
+}
+
+.plant__risks-title {
+  margin: 0 0 5px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plant__risk {
+  margin: 0 0 5px;
+  font-size: 11px;
+  padding-left: 10px;
+  border-left: 3px solid var(--warn);
+}
+
+.plant__risk[data-severity="bad"] {
+  border-left-color: var(--bad);
+  font-weight: bold;
+}
+
+.plant__dead {
+  border: var(--px) solid var(--bad);
+  background: #f2ddd6;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.plant__dead-text {
+  margin: 0;
+  font-size: 12px;
+}
+
+.plant__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px 16px;
+}
+
+.stats__group {
+  min-width: 0;
+}
+
+.stats__title {
+  margin: 0 0 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b5f4c;
+  border-bottom: 1px solid var(--paper-deep);
+}
+
+/* Для шкідників «більше» означає «гірше» — колір смужки перевертається. */
+.stats__group[data-invert] .stat__fill,
+.stat[data-invert="true"] .stat__fill {
+  background: var(--good);
+}
+
+.stat[data-invert="true"] .stat__fill[data-level="high"] {
+  background: var(--bad);
+}
+
+.stat[data-invert="true"] .stat__fill[data-level="low"] {
+  background: var(--good);
+}
+
+.plant__pot-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 11px;
+  background: var(--paper-dark);
+  border: 1px solid var(--shadow);
+  padding: 4px 6px;
+}
+
+/* ─────────────────────────────── Дії ─────────────────────────────── */
+
+.panel__actions-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b5f4c;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 8px;
+}
+
+.card[data-important="true"] {
+  border-color: var(--accent);
+}
+
+.card__flag {
+  margin: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+}
+
+.card__blocked {
+  font-size: 10px;
+  color: #6b5f4c;
+  align-self: center;
+}
+
+.btn--small {
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+/* ─────────────────────────────── Підвал ─────────────────────────────── */
+
+.panel__foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  margin-top: auto;
+  background: var(--paper);
+  border-top: var(--px) solid var(--shadow);
+}
+
+.panel__budget {
+  font-size: 12px;
+  background: var(--paper-dark);
+  border: 1px solid var(--shadow);
+  padding: 3px 8px;
+}
+
+.panel__budget[data-empty="true"] {
+  background: var(--warn);
+}
+
+/* ─────────────────────────── Список ефектів ─────────────────────────── */
+
+.effects {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.effects__item {
+  border-left: 3px solid var(--paper-deep);
+  padding-left: 7px;
+}
+
+.effects__item[data-tone="good"] {
+  border-left-color: var(--good);
+}
+
+.effects__item[data-tone="bad"] {
+  border-left-color: var(--bad);
+}
+
+.effects__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.effects__delta {
+  font-weight: bold;
+}
+
+.effects__reason {
+  margin: 1px 0 0;
+  font-size: 11px;
+}
+
+.effects__empty {
+  font-size: 11px;
+  color: #6b5f4c;
+}
+
+/* ─────────────────────────── Розбір місяця ─────────────────────────── */
+
+.debrief__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.debrief__title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: var(--px) solid var(--shadow);
+  padding-bottom: 3px;
+}
+
+.debrief__group {
+  margin-bottom: 10px;
+}
+
+.debrief__group-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.debrief__action {
+  margin-bottom: 8px;
+  padding-left: 6px;
+  border-left: 1px dashed var(--paper-deep);
+}
+
+.debrief__action-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.debrief__action-name {
+  margin: 0 0 3px;
+  font-size: 11px;
+}
+
+.debrief__empty {
+  font-size: 11px;
+  color: #6b5f4c;
+}
+
+.debrief__details {
+  margin-bottom: 6px;
+  border: 1px solid var(--paper-deep);
+  padding: 5px 7px;
+}
+
+.debrief__summary {
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.debrief__events {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.debrief__event {
+  background: var(--paper-dark);
+  border-left: 3px solid var(--accent);
+  padding: 6px 9px;
+}
+
+.debrief__event-title {
+  margin: 0 0 2px;
+  font-size: 12px;
+}
+
+.debrief__event-text {
+  margin: 0;
+  font-size: 11px;
+}
+
+.debrief__deaths {
+  border: var(--px) solid var(--bad);
+  background: #f2ddd6;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.debrief__deaths-title,
+.debrief__death-name {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--bad);
+}
+
+.debrief__death-reason {
+  margin: 0 0 6px;
+  font-size: 11px;
+}
+
+.debrief__missed {
+  margin-top: 14px;
+  border-top: var(--px) solid var(--shadow);
+  padding-top: 10px;
+}
+
+.debrief__missed-note {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #6b5f4c;
+}
+
+.debrief__missed-item {
+  border-left: 3px solid var(--warn);
+  padding-left: 8px;
+  margin-bottom: 7px;
+}
+
+.debrief__missed-title {
+  margin: 0 0 2px;
+  font-size: 12px;
+}
+
+.debrief__missed-text {
+  margin: 0;
+  font-size: 11px;
+}
+
+/* ─────────────────────────────── Розтин ─────────────────────────────── */
+
+.autopsy__cause {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.autopsy__label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--bad);
+  font-weight: bold;
+}
+
+.autopsy__text {
+  margin: 0 0 6px;
+  font-size: 12px;
+}
+
+.autopsy__title {
+  margin: 14px 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--paper-deep);
+}
+
+.autopsy__pivot {
+  border: var(--px) solid var(--accent);
+  background: #f7ead8;
+  padding: 10px;
+  margin-top: 12px;
+}
+
+.autopsy__pivot .autopsy__title {
+  margin-top: 0;
+}
+
+.autopsy__pivot-when {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.autopsy__pivot-note {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #6b5f4c;
+}
+
+.autopsy__remedy-item {
+  border-left: 3px solid var(--good);
+  padding-left: 8px;
+  margin-bottom: 8px;
+}
+
+.autopsy__remedy-name {
+  margin: 0 0 2px;
+  font-size: 12px;
+}
+
+.autopsy__compare {
+  background: var(--paper-dark);
+  padding: 9px;
+  border-left: 3px solid var(--shadow);
+}
+
+/* ────────────────────────────── Хронологія ────────────────────────────── */
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 12px;
+  border-left: var(--px) solid var(--paper-deep);
+}
+
+.timeline__item {
+  position: relative;
+  padding: 0 0 10px 8px;
+}
+
+.timeline__item::before {
+  content: "";
+  position: absolute;
+  left: -17px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  background: var(--paper-deep);
+  border: 1px solid var(--shadow);
+}
+
+.timeline__item[data-tone="bad"]::before {
+  background: var(--bad);
+}
+
+.timeline__item[data-pivot="true"]::before {
+  background: var(--accent);
+  width: 10px;
+  height: 10px;
+  left: -18px;
+}
+
+.timeline__head {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.timeline__when {
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.timeline__tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  background: var(--accent);
+  color: #fff6e0;
+  padding: 0 4px;
+}
+
+.timeline__text {
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+
+/* ─────────────────────────────── Звіт ─────────────────────────────── */
+
+.report__summary {
+  text-align: center;
+  border-bottom: var(--px) solid var(--shadow);
+  padding-bottom: 10px;
+}
+
+.report__total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.report__total-value {
+  font-size: 30px;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.report__total-label {
+  font-size: 12px;
+}
+
+.report__total-green {
+  font-size: 11px;
+  color: var(--warn);
+}
+
+.report__lesson {
+  background: var(--paper-dark);
+  border-left: 3px solid var(--accent);
+  padding: 9px 11px;
+  margin: 12px 0;
+}
+
+.report__lesson-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.report__lesson-text {
+  margin: 0;
+  font-size: 12px;
+}
+
+.report__title {
+  margin: 16px 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: var(--px) solid var(--shadow);
+  padding-bottom: 3px;
+}
+
+.report__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.report__plant {
+  border: var(--px) solid var(--shadow);
+  background: var(--paper);
+  padding: 9px;
+}
+
+.report__plant[data-tone="bad"] {
+  background: #f2ddd6;
+}
+
+.report__plant[data-tone="warn"] {
+  background: #f7edd8;
+}
+
+.report__plant-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.report__plant-name {
+  margin: 0;
+  font-size: 14px;
+}
+
+.report__plant-grade {
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.report__numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+}
+
+.report__grams {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.report__count {
+  font-size: 12px;
+}
+
+.report__green {
+  font-size: 11px;
+  color: var(--warn);
+}
+
+.report__plant-meta {
+  margin: 0 0 5px;
+  font-size: 11px;
+  color: #6b5f4c;
+}
+
+.report__ripe-note {
+  margin: 0 0 5px;
+  font-size: 11px;
+  border-left: 3px solid var(--warn);
+  padding-left: 7px;
+}
+
+.report__plant-note,
+.report__plant-dead {
+  margin: 0 0 6px;
+  font-size: 11px;
+}
+
+.report__factors-summary {
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.factor {
+  border-top: 1px dashed var(--paper-deep);
+  padding: 5px 0;
+}
+
+.factor[data-key="age"] {
+  background: #f2e7cf;
+}
+
+.factor__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.factor__detail,
+.factor__why {
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+
+.factor__why {
+  color: #6b5f4c;
+}
+
+.report__forecast {
+  margin: 8px 0 0;
+  font-size: 11px;
+  background: var(--paper-dark);
+  padding: 5px 7px;
+}
+
+.report__charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.report__chart-title {
+  margin: 0 0 5px;
+  font-size: 12px;
+}
+
+.report__chart--wide {
+  grid-column: 1 / -1;
+}
+
+.report__note {
+  margin: 0 0 5px;
+  font-size: 11px;
+  border-left: 3px solid var(--paper-deep);
+  padding-left: 8px;
+}
+
+.report__note[data-tone="good"] {
+  border-left-color: var(--good);
+}
+
+.report__note[data-tone="warn"] {
+  border-left-color: var(--warn);
+}
+
+.report__note[data-tone="bad"] {
+  border-left-color: var(--bad);
+}
+
+/* ─────────────────────────────── Довідник ─────────────────────────────── */
+
+.codex {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 14px;
+  max-height: 62vh;
+}
+
+@media (max-width: 720px) {
+  .codex {
+    grid-template-columns: 1fr;
+  }
+}
+
+.codex__nav {
+  overflow-y: auto;
+  border-right: 1px solid var(--paper-deep);
+  padding-right: 8px;
+}
+
+.codex__group {
+  margin: 10px 0 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b5f4c;
+}
+
+.codex__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.codex__link {
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  width: 100%;
+  padding: 3px 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.codex__link:hover {
+  background: var(--paper-dark);
+}
+
+.codex__link[data-active="true"] {
+  background: var(--accent);
+  color: #fff6e0;
+}
+
+.codex__article {
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.codex__title {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.codex__text {
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+
+.codex__see {
+  margin-top: 14px;
+  border-top: 1px solid var(--paper-deep);
+  padding-top: 8px;
+}
+
+.codex__see-title {
+  margin: 0 0 5px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b5f4c;
+}
+
+.codex__see-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* ─────────────────────────────── Вступ ─────────────────────────────── */
+
+.intro__lead {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.intro__text {
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+
+.intro__warning {
+  margin: 8px 0 0;
+  font-size: 12px;
+  border-left: 3px solid var(--bad);
+  padding-left: 8px;
+}
+
+.intro__plants {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.intro__plant {
+  border: 1px solid var(--shadow);
+  background: var(--paper-dark);
+  padding: 7px 9px;
+}
+
+.intro__plant-name {
+  margin: 0 0 1px;
+  font-size: 13px;
+}
+
+.intro__plant-species {
+  font-size: 10px;
+  font-style: italic;
+  color: #6b5f4c;
+}
+
+.intro__plant-note {
+  margin: 4px 0 0;
+  font-size: 11px;
+}

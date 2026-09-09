@@ -1,0 +1,23 @@
+{
+  "name": "edu-simulations",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Монорепа навчальних симуляцій-ігор",
+  "type": "module",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "build:site": "turbo run build && node scripts/build-site.mjs",
+    "preview:site": "pnpm --filter @edu/portal exec vite preview --outDir ../../dist --port 4173",
+    "preview": "turbo run preview",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "pnpm@11.14.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

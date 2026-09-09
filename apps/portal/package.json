@@ -1,0 +1,20 @@
+{
+  "name": "@edu/portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Головна сторінка: каталог усіх симуляцій монорепи за категоріями",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "node --check src/main.js"
+  },
+  "dependencies": {
+    "@edu/catalog": "workspace:*",
+    "@edu/pixel-ui": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^6.0.7"
+  }
+}

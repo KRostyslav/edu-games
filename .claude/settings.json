@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm build *)",
+      "Bash(node /tmp/claude-1000/-home-krostyslav-users-ros-dev-edu-simulations/8fcc8800-ebce-42c0-9afd-ead923744ff9/scratchpad/simulate.mjs)",
+      "Bash(node /tmp/claude-1000/-home-krostyslav-users-ros-dev-edu-simulations/8fcc8800-ebce-42c0-9afd-ead923744ff9/scratchpad/winter.mjs)",
+      "Bash(sed -i 's#10: \\\\[\"autumn_water\", \"cover_vines\"\\\\],#10: [\"cover_vines\", \"pk_feed\"],#; s#11: \\\\[\"prune_balanced\", \"pk_feed\", \"clean_leaves\"\\\\],#11: [\"prune_balanced\", \"clean_leaves\", \"katarovka\"],#' winter.mjs)",
+      "Bash(node winter.mjs)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(node browser.mjs)",
+      "Bash(curl -s -o /dev/null -w \"favicon: %{http_code}\\\\n\" http://127.0.0.1:5199/favicon.ico)",
+      "Bash(node scenes.mjs)",
+      "Bash(rm -f scene-*.png)",
+      "Bash(python3 -)",
+      "Bash(node --test test/)",
+      "Bash(node --test)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm test *)",
+      "Bash(curl -sf -o /dev/null -w \"preview: %{http_code}\\\\n\" http://127.0.0.1:5200/)",
+      "Bash(node prod.mjs)",
+      "Bash(sed 's#:5199/#:5200/#' browser.mjs)",
+      "Bash(pkill -f \"vite --port 5199\")",
+      "Bash(pkill -f \"vite preview --port 5200\")"
+    ]
+  }
+}

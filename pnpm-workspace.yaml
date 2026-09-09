@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+# esbuild ставить власний бінарник у postinstall — без цього Vite не запуститься.
+allowBuilds:
+  esbuild: true

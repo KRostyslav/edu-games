@@ -1,0 +1,15 @@
+{
+  "name": "@edu/catalog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Реєстр ігор монорепи: єдине джерело правди для порталу й збірки сайту",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["src"],
+  "scripts": {
+    "lint": "node --check src/index.js"
+  }
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🎓</text></svg>"
+    />
+    <title>Навчальні симуляції</title>
+    <meta
+      name="description"
+      content="Каталог піксельних навчальних симуляцій: кожна гра пояснює предметну область через наслідки рішень гравця."
+    />
+  </head>
+  <body>
+    <div id="app" class="portal">
+      <header class="portal__head">
+        <h1 class="portal__title">Навчальні симуляції</h1>
+        <p class="portal__lead">
+          Кожна гра пояснює предметну область через наслідки рішень, а не через текстові уроки.
+        </p>
+      </header>
+
+      <nav class="tabs" id="tabs" aria-label="Категорії"></nav>
+
+      <main>
+        <ul class="rows" id="list"></ul>
+        <p class="rows__empty" id="empty" hidden>У цій категорії поки порожньо.</p>
+      </main>
+
+      <footer class="portal__foot" id="foot"></footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

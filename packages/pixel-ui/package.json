@@ -1,0 +1,16 @@
+{
+  "name": "@edu/pixel-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Піксельний UI-шар для навчальних симуляцій: canvas, палітра, віджети",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./pixel.css": "./src/pixel.css"
+  },
+  "files": ["src"],
+  "scripts": {
+    "lint": "node --check src/index.js"
+  }
+}

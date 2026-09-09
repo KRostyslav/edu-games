@@ -1,0 +1,16 @@
+{
+  "name": "@edu/sim-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Рушій покрокових навчальних симуляцій: стан, ходи, RNG, події, збереження",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["src"],
+  "scripts": {
+    "lint": "node --check src/index.js",
+    "test": "node --test"
+  }
+}
