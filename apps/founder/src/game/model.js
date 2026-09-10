@@ -302,6 +302,21 @@ export function createInitialState(scenario, seed = 1) {
     usedOnce: [],
     pending: null,
     verdict: null,
+
+    /**
+     * Досягнуте — факт про партію, а не поточний стан. Серія може зламатися,
+     * але «ви це зробили» скасувати не можна, і фінал 36-го місяця має право
+     * про це знати. Зберігаємо місяць, у який серія завершилася.
+     */
+    achieved: { ramen: null, salary: null },
+    /** Чи вже питали «зупинитися чи грати далі» — щоб не перепитувати після F5. */
+    milestones: { goalOffered: false },
+    /** Місяць, у який гравець зупинив партію сам. */
+    finishedAt: null,
+    /** Продаж проєкту. Пише лише acceptOffer — один автор робить вирок надійним. */
+    soldFor: null,
+    soldAt: null,
+    declinedOffers: [],
   };
 }
 

@@ -184,6 +184,14 @@ export function createMonthPanel({ root, onAdvance }) {
     current = state;
     const scenario = scenarioOf(state);
 
+    // Завершену партію панель не показує взагалі. Захист другого рівня:
+    // основну гарантію дає сам рушій, але між закриттям розбору й появою
+    // фіналу не має бути моменту, коли кнопку «Прожити місяць» видно живою.
+    if (state.verdict?.over) {
+      renderFinished(state);
+      return;
+    }
+
     title.textContent = `${MONTH_NAMES[state.month - 1]}, рік ${state.year} — місяць ${state.monthIndex} з ${TOTAL_MONTHS}`;
     scenarioLine.textContent = `${scenario.name}. Рівень аналітики: ${LEVELS[state.analytics.level].name}.`;
     goal.textContent = `Мета: щоб продукт після всіх комісій і податків приносив $${scenario.salaryTarget.toLocaleString(
@@ -286,6 +294,20 @@ export function createMonthPanel({ root, onAdvance }) {
 
     budget.textContent = `${Math.round(spent)} з ${hours(available)}`;
     budget.dataset.full = String(spent >= available * 0.95);
+  }
+
+  function renderFinished(state) {
+    title.textContent = `Партію завершено на ${state.monthLog.length}-му місяці`;
+    scenarioLine.textContent = state.verdict.cause;
+    goal.textContent = state.verdict.reason;
+    warnings.replaceChildren();
+    statsWrap.hidden = true;
+    categoryTabs.replaceChildren();
+    grid.replaceChildren();
+    budget.textContent = "";
+    budgetNote.textContent = "";
+    advance.disabled = true;
+    advance.textContent = "Гру завершено";
   }
 
   return {

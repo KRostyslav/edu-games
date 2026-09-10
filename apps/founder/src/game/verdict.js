@@ -129,7 +129,10 @@ export function risksFor(state) {
     risks.push({
       code: "debt_tax",
       chainFor: "stall",
-      severity: "warn",
+      // Вище 70 борг з'їдає чверть бюджету годин — це вже не попередження,
+      // а причина, через яку партія стоїть на місці. Без цього переходу
+      // родина `stall` не мала б жодного маркера, і поради до неї були б недосяжні.
+      severity: product.techDebt > 70 ? "bad" : "warn",
       needsLevel: 0,
       text: `Технічний борг ${Math.round(product.techDebt)}/100 з'їдає помітну частину бюджету годин. Ви працюєте стільки ж і робите менше.`,
     });
@@ -177,8 +180,15 @@ export function risksFor(state) {
 }
 
 /**
- * Вирок. Порядок перевірок — це порядок невідворотності:
- * скінчилися гроші, скінчилися сили, а вже потім усе інше.
+ * Вирок.
+ *
+ * Функція повертає АБО фінал, АБО null. Проміжних станів тут немає за побудовою,
+ * і це не стилістика: коли м'яка віха («мету досягнуто») поверталася тим самим
+ * каналом, що й фінал, вона його заслоняла — партія, яка виграла, не закінчувалася
+ * ніколи. М'які віхи тепер живуть в окремій `milestonesFor`.
+ *
+ * Порядок перевірок — це порядок невідворотності: скінчилися гроші, скінчилися
+ * сили, а вже потім усе інше.
  */
 export function judge(state) {
   const { biz, founder } = state;
@@ -186,6 +196,7 @@ export function judge(state) {
   if (biz.cash < 0) {
     return {
       code: "bankruptcy",
+      kind: "loss",
       cause: "Гроші закінчилися",
       reason:
         "Рахунок пішов у мінус. Продукт міг бути яким завгодно перспективним — бутстрап закінчується тоді, коли закінчуються гроші, а не тоді, коли закінчуються ідеї.",
@@ -203,6 +214,7 @@ export function judge(state) {
   if (founder.energy <= 0 || flatlined) {
     return {
       code: "burnout",
+      kind: "loss",
       cause: "Вигорання",
       reason:
         "Сил не лишилося. Це найтихіший зі способів програти: жодного драматичного місяця, просто щоразу трохи менше зроблено, ніж попереднього — і в якийсь момент виявилося, що продукт живий, а ви ні.",
@@ -213,54 +225,87 @@ export function judge(state) {
   if (state.soldFor) {
     return {
       code: "sold",
+      kind: "win",
       cause: "Проєкт продано",
-      reason: `Ви прийняли пропозицію й отримали $${state.soldFor.toLocaleString("uk-UA")}. Це нормальний фінал: не кожен продукт має жити вічно, і гроші за три роки роботи — цілком чесний результат.`,
+      reason: `Ви прийняли пропозицію й отримали $${Math.round(state.soldFor).toLocaleString("uk-UA")}. Це нормальний фінал, а не капітуляція: не кожен продукт мусить жити вічно, і те, що зроблене вами варте для когось конкретної суми, — цілком чесний результат трьох років.`,
       over: true,
     };
   }
 
-  if (biz.salaryMonths >= 6) {
-    return {
-      code: "win_salary",
-      cause: "Продукт замінив зарплату",
-      reason:
-        "Шість місяців поспіль продукт приносить більше, ніж ваша зарплата, — після всіх комісій, податків та інфраструктури. Саме це, а не разовий пік, і означає «вийшло».",
-      over: false,
-    };
-  }
-
-  // Рахуємо ЗІГРАНІ місяці, а не номер поточного: лічильник місяця
-  // зупиняється на 36, тому порівняння з ним обірвало б партію на місяць раніше.
-  if (state.monthLog.length >= TOTAL_MONTHS) {
-    if (biz.mrr > 0 && biz.ramenMonths >= 3) {
-      return {
-        code: "stalled_growing",
-        cause: "Три роки: продукт живий",
-        reason:
-          "Зарплату замінити не встигли, але продукт працює, приносить гроші й росте. Це не поразка — це середина шляху, яку більшість не проходить.",
-        over: true,
-      };
-    }
-    return {
-      code: "stalled",
-      cause: "Три роки: продукт не злетів",
-      reason:
-        "Тридцять шість місяців минуло, зарплати продукт не замінив. Найкорисніше тут — не втішитися й не засмутитися, а подивитися, у якому саме місяці все вирішилося.",
-      over: true,
-    };
-  }
-
-  if (biz.ramenMonths >= 6) {
-    return {
-      code: "win_ramen",
-      cause: "Продукт годує",
-      reason:
-        "Пів року поспіль продукт покриває ваші витрати. Це перша справжня точка неповернення: далі можна не поспішати.",
-      over: false,
-    };
-  }
+  // Партія закінчується, коли зіграно всі місяці АБО коли гравець зупинився сам.
+  // Рахуємо зіграні місяці, а не номер поточного: лічильник місяця впирається
+  // в 36, тому порівняння з ним обірвало б партію на місяць раніше.
+  const finished = state.monthLog.length >= TOTAL_MONTHS || state.finishedAt != null;
+  if (finished) return outcomeOf(state);
 
   return null;
+}
+
+/**
+ * Який саме фінал, коли партія дійшла до кінця живою.
+ *
+ * Дивиться на `achieved`, а не на поточні серії: досягти мети один раз — це факт
+ * про партію. Гравець, який виграв на 20-му місяці, грав далі й дав серії
+ * зламатися, все одно завершує перемогою — а розбір показує, коли саме вона
+ * зламалася і чому.
+ */
+function outcomeOf(state) {
+  const { achieved, biz } = state;
+
+  if (achieved?.salary) {
+    return {
+      code: "win_salary",
+      kind: "win",
+      cause: "Продукт замінив зарплату",
+      reason:
+        "Шість місяців поспіль продукт приносив більше за вашу зарплату — після комісій платіжної системи, податків, інфраструктури та реклами. Саме це, а не разовий пік, і означає «вийшло».",
+      over: true,
+    };
+  }
+
+  if (achieved?.ramen) {
+    return {
+      code: "win_ramen",
+      kind: "partial",
+      cause: "Продукт годує, але зарплати не замінив",
+      reason:
+        "Пів року поспіль продукт покривав ваші витрати — ви пройшли точку, за якою він перестав бути хобі. Зарплати він не замінив, і це найчастіший реальний результат трьох років: бізнес є, свободи ще немає.",
+      over: true,
+    };
+  }
+
+  if (biz.mrr > 0 && biz.ramenMonths >= 3) {
+    return {
+      code: "stalled_growing",
+      kind: "partial",
+      cause: "Три роки: продукт живий",
+      reason:
+        "Зарплату замінити не встигли, але продукт працює, приносить гроші й росте. Це не поразка — це середина шляху, до якої більшість не доходить.",
+      over: true,
+    };
+  }
+
+  return {
+    code: "stalled",
+    kind: "loss",
+    cause: "Три роки: продукт не злетів",
+    reason:
+      "Тридцять шість місяців минуло, зарплати продукт не замінив. Найкорисніше тут — не втішитися й не засмутитися, а подивитися, у якому саме місяці все вирішилося.",
+    over: true,
+  };
+}
+
+/**
+ * М'які віхи — те, що сталося, але партію не завершує.
+ *
+ * Окремий канал від `judge` саме тому, що колись вони йшли одним і віха
+ * заслоняла фінал.
+ */
+export function milestonesFor(state) {
+  const out = [];
+  if (state.biz.salaryMonths >= 6) out.push({ code: "goal_reached", monthIndex: state.monthIndex });
+  if (state.biz.ramenMonths >= 6) out.push({ code: "ramen_reached", monthIndex: state.monthIndex });
+  return out;
 }
 
 /** Кілька однакових маркерів поспіль — це один період, а не шість подій. */
@@ -286,43 +331,94 @@ function collapseRuns(markers) {
  * і моментом наслідку.
  */
 export function buildAutopsy(state, verdict) {
-  const chain = collapseRuns(
-    state.journal
-      .filter((marker) => marker.chainFor === verdict.code)
-      .sort((a, b) => a.monthIndex - b.monthIndex),
-  );
+  const families = CHAINS_FOR[verdict.code] ?? [];
+  const bad = state.journal
+    .filter((marker) => marker.chainFor)
+    .sort((a, b) => a.monthIndex - b.monthIndex);
+
+  // Групуємо за родиною й лишаємо тільки ті, що мають сенс для цього фіналу.
+  const chains = families
+    .map((family) => ({
+      family,
+      markers: collapseRuns(bad.filter((marker) => marker.chainFor === family)),
+    }))
+    .filter((entry) => entry.markers.length > 0);
+
+  // Головна лінія — найдовша; за рівності виграє та, що почалася раніше.
+  const primary = chains.reduce((best, entry) => {
+    if (!best) return entry;
+    if (entry.markers.length !== best.markers.length) {
+      return entry.markers.length > best.markers.length ? entry : best;
+    }
+    return entry.markers[0].monthIndex < best.markers[0].monthIndex ? entry : best;
+  }, null);
+
+  const chain = primary?.markers ?? [];
 
   // Маркери, які спрацювали тоді, коли гравець фізично не міг побачити
   // число за ними. Це те, заради чого в грі є рівні аналітики.
-  const invisible = state.journal
-    .filter((marker) => marker.needsLevel > marker.levelAtTime)
-    .sort((a, b) => a.monthIndex - b.monthIndex);
+  const invisible = collapseRuns(
+    state.journal
+      .filter((marker) => marker.needsLevel > marker.levelAtTime)
+      .sort((a, b) => a.monthIndex - b.monthIndex),
+  );
 
   return {
     ...verdict,
+    endedAt: state.monthLog.length,
+    early: state.monthLog.length < TOTAL_MONTHS,
+    achieved: state.achieved ?? { ramen: null, salary: null },
+    soldFor: state.soldFor ?? null,
+    chains,
     chain,
+    primaryFamily: primary?.family ?? null,
     decidedAt: chain[0] ?? null,
     lastChance: chain.length > 1 ? chain[chain.length - 2] : null,
-    invisible: collapseRuns(invisible),
+    invisible,
     // Зберігаємо лише ідентифікатори: стан проходить через structuredClone,
     // а живі об'єкти дій несуть функції й клонуванню не піддаються.
-    remedyIds: REMEDIES[verdict.code] ?? [],
+    remedyIds: REMEDIES[primary?.family] ?? REMEDIES[verdict.code] ?? [],
   };
 }
+
+/**
+ * Які лінії подій має сенс показувати для кожного фіналу.
+ *
+ * Раніше маркери шукалися за збігом `chainFor` із кодом вироку, але ці дві
+ * множини майже не перетинаються: для звичайного фіналу на 36-му місяці
+ * хронологія завжди виходила порожньою. Явна мапа прибирає цю мовчазну діру.
+ */
+const CHAINS_FOR = {
+  bankruptcy: ["bankruptcy", "no_growth", "no_fit"],
+  burnout: ["burnout"],
+  stalled: ["no_fit", "no_growth", "leaky_bucket", "stall"],
+  stalled_growing: ["leaky_bucket", "stall", "no_growth"],
+  win_ramen: ["leaky_bucket", "stall", "no_growth"],
+  // Навіть у виграшу є що показати: ціна перемоги видно саме тут.
+  win_salary: ["burnout", "leaky_bucket"],
+  sold: [],
+};
+
+export { CHAINS_FOR };
 
 /**
  * Що треба було робити. Беремо живі об'єкти дій із реєстру, а не окремий текст,
  * щоб порада не могла розійтися з тим, що написано на картці.
  */
-const REMEDIES = {
+export const REMEDIES = {
+  // Ключі — родини ланцюгів, а не коди фіналів: саме родина називає, ЩО пішло не так.
   no_fit: ["customer_interviews", "landing_smoke_test", "narrow_the_niche", "talk_to_churned"],
   no_growth: ["write_article", "community_presence", "cold_outreach", "install_analytics"],
   leaky_bucket: ["talk_to_churned", "fix_bugs", "support_sprint", "ship_requested_feature"],
   bankruptcy: ["raise_price", "add_annual_plan", "stop_ads", "take_client_project"],
   burnout: ["rest_week", "healthy_month", "write_docs", "support_sprint"],
   stall: ["refactor", "narrow_the_niche", "raise_price"],
+  // Запасні ключі за кодом фіналу — коли жодна родина не набрала маркерів.
   stalled: ["customer_interviews", "cold_outreach", "raise_price"],
   stalled_growing: ["raise_price", "collect_testimonials", "write_article"],
+  win_ramen: ["raise_price", "add_annual_plan", "collect_testimonials"],
+  win_salary: [],
+  sold: [],
 };
 
 export function remediesFor(code) {

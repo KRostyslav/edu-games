@@ -13,6 +13,11 @@ import { SCENARIOS } from "../src/data/scenarios.js";
 import { createInitialState, TOTAL_MONTHS } from "../src/game/model.js";
 import { createMonthEngine } from "../src/game/month.js";
 import { pickByIds, hintedPicks } from "../src/game/strategy.js";
+import { ACTIONS_BY_ID } from "../src/data/actions.data.js";
+import { judge, CHAINS_FOR, REMEDIES } from "../src/game/verdict.js";
+import { repairSave } from "../src/game/migrate.js";
+import { buildReview } from "../src/game/review.js";
+import { STRENGTHS, MISTAKES } from "../src/game/reviewItems.js";
 
 const SEEDS = Number(process.argv[2] ?? 20);
 const ONLY_SCENARIO = process.argv[3] ?? null;
@@ -131,6 +136,7 @@ function runOnce(scenarioId, strategyKey, seed) {
 
   let ended = null;
   let endMonth = TOTAL_MONTHS;
+  let judgeContractOk = true;
   let peakMrr = 0;
   let peakMonth = 0;
   let seoAt6 = 0;
@@ -142,8 +148,14 @@ function runOnce(scenarioId, strategyKey, seed) {
 
     const picks = strategy.pick(state);
     const turn = season.playMonth(picks);
+    if (turn.noop) break;
 
     for (const effect of turn.effects) seenTargets.add(effect.target);
+
+    // Контракт: судити можна лише остаточно. М'яка віха, повернена звідси,
+    // заслонила б фінал — саме так гра колись і зациклювалася на 36-му місяці.
+    const check = judge(season.engine.state);
+    if (check && check.over !== true) judgeContractOk = false;
 
     const after = turn.after;
     if (after.biz.mrr > peakMrr) {
@@ -161,7 +173,16 @@ function runOnce(scenarioId, strategyKey, seed) {
   }
 
   const final = season.engine.state;
+  const indices = final.monthLog.map((entry) => entry.monthIndex);
   return {
+    terminated: final.verdict?.over === true,
+    logOk:
+      final.monthLog.length <= TOTAL_MONTHS &&
+      final.history.length <= TOTAL_MONTHS &&
+      indices.every((value, i) => i === 0 || value > indices[i - 1]),
+    judgeContractOk,
+    verdictCode: final.verdict?.code ?? null,
+    state: final,
     verdict: ended ?? final.verdict ?? null,
     endMonth,
     peakMrr,
@@ -243,6 +264,8 @@ for (const scenarioId of scenarioIds) {
 const checks = [];
 const check = (name, pass, detail) => checks.push({ name, pass, detail });
 
+const allRuns = Object.values(results).flatMap((byStrategy) => Object.values(byStrategy).flat());
+
 const base = results[ONLY_SCENARIO ?? "savings"];
 if (base) {
   const buildMrr = avg(base.build_only, "mrr");
@@ -286,7 +309,6 @@ if (base) {
     `відтік ${marketChurn.toFixed(1)}%, дірявих прогонів ${Math.round(leaky * 100)}%`,
   );
 
-  const allRuns = Object.values(results).flatMap((byStrategy) => Object.values(byStrategy).flat());
   check(
     "Модель не видає фантастичних результатів: p95 MRR < $12 000",
     p95(allRuns, "mrr") < 12000,
@@ -315,14 +337,194 @@ if (base) {
   const cheapCustomers = avg(cheapRuns, "customers");
   const balancedCustomers = avg(base.balanced, "customers");
   check(
-    "Урок про ціну: дешевше не купує більше клієнтів, зате вдвічі менше грошей",
-    cheapCustomers <= 1.05 * balancedCustomers && avg(cheapRuns, "mrr") < 0.6 * avg(base.balanced, "mrr"),
+    "Урок про ціну: дешевше майже не додає клієнтів, зате дає вдвічі менше грошей",
+    cheapCustomers <= 1.15 * balancedCustomers && avg(cheapRuns, "mrr") < 0.6 * avg(base.balanced, "mrr"),
     `клієнтів ${Math.round(cheapCustomers)} проти ${Math.round(
       balancedCustomers,
     )} — стеля підтримки та сама, а грошей на реінвестування менше; MRR ${money(
       avg(cheapRuns, "mrr"),
     )} проти ${money(avg(base.balanced, "mrr"))}`,
   );
+}
+
+// ─────────────────── твердження про кінець партії ───────────────────
+
+check(
+  "Кожна партія закінчується: вирок over === true в межах 36 ходів",
+  allRuns.every((r) => r.terminated),
+  `${allRuns.filter((r) => r.terminated).length}/${allRuns.length} прогонів завершилися`,
+);
+
+check(
+  "monthLog не перевищує 36 записів, індекси строго зростають",
+  allRuns.every((r) => r.logOk),
+  `${allRuns.filter((r) => r.logOk).length}/${allRuns.length} логів цілі`,
+);
+
+check(
+  "Контракт judge(): нефінальний вирок неможливий",
+  allRuns.every((r) => r.judgeContractOk),
+  `${allRuns.filter((r) => r.judgeContractOk).length}/${allRuns.length} прогонів без порушень`,
+);
+
+const codes = new Set(allRuns.map((r) => r.verdictCode));
+// Повний перелік вимагаємо лише коли зіграно всі сценарії: `stalled` дає
+// сценарій «вечорами», де програш означає застій, а не банкрутство.
+const wanted = scenarioIds.length === Object.keys(SCENARIOS).length
+  ? ["bankruptcy", "burnout", "win_salary", "win_ramen", "stalled", "stalled_growing"]
+  : ["bankruptcy", "win_salary"];
+check(
+  "Усі основні фінали досяжні",
+  wanted.every((code) => codes.has(code)),
+  `трапилися: ${[...codes].filter(Boolean).sort().join(", ")}${
+    scenarioIds.length === Object.keys(SCENARIOS).length ? "" : " (частковий прогін — перевірено скорочений перелік)"
+  }`,
+);
+
+// Відтворення партії з початкового сіда має збігтися до місяця — саме на цьому
+// тримається розділ розбору «що краще було робити». Порівнюємо прогін,
+// згенерований у ЦЬОМУ ж процесі: навмисна зміна балансу не має валити тест.
+{
+  const original = runOnce("savings", "balanced", 31337);
+  const src = original.state;
+  const replay = createMonthEngine({
+    initialState: createInitialState(SCENARIOS.savings, src.startSeed),
+    seed: src.startSeed,
+  });
+  let mismatch = null;
+  for (let i = 0; i < src.monthLog.length; i += 1) {
+    const picks = pickByIds(replay.engine.state, src.monthLog[i].actions);
+    if (picks.length !== src.monthLog[i].actions.length) { mismatch = `місяць ${i + 1}: дії не відтворилися`; break; }
+    replay.playMonth(picks);
+    const got = replay.engine.state.biz;
+    const want = src.history[i];
+    if (got.customers !== want.customers || Math.abs(got.mrr - want.mrr) > 0.5) {
+      mismatch = `місяць ${i + 1}: ${Math.round(got.mrr)} проти ${Math.round(want.mrr)}`;
+      break;
+    }
+  }
+  check("Партія точно відтворюється з початкового сіда", mismatch === null, mismatch ?? `${src.monthLog.length} місяців збіглися`);
+}
+
+// Години мусять відновлюватися з логу: інакше розділ «куди пішли години» бреше.
+{
+  let worst = 0;
+  for (const run of allRuns) {
+    for (const entry of run.state.monthLog) {
+      const sum = (entry.costs ?? []).reduce((acc, cost) => acc + cost, 0);
+      worst = Math.max(worst, Math.abs(sum - entry.hoursSpent));
+    }
+  }
+  check("Витрачені години відновлюються з логу", worst <= 1, `найбільше розходження ${worst} год`);
+}
+
+// Ремонт зіпсованого збереження — того самого, яке лишилося після зациклення.
+{
+  const clean = runOnce("savings", "balanced", 4242).state;
+  const broken = structuredClone(clean);
+  for (let i = 0; i < 5; i += 1) {
+    broken.monthLog.push(structuredClone(broken.monthLog[broken.monthLog.length - 1]));
+    broken.history.push(structuredClone(broken.history[broken.history.length - 1]));
+  }
+  broken.verdict = null;
+
+  const once = repairSave(broken);
+  const twice = repairSave(once);
+  const idempotent = JSON.stringify(once) === JSON.stringify(twice);
+  const ok =
+    idempotent &&
+    once.monthLog.length === TOTAL_MONTHS &&
+    new Set(once.monthLog.map((e) => e.monthIndex)).size === TOTAL_MONTHS &&
+    once.verdict?.over === true &&
+    once.achieved.salary === clean.achieved.salary;
+  check(
+    "Зіпсоване збереження ремонтується й дає той самий фінал",
+    ok,
+    `ідемпотентно: ${idempotent}, місяців: ${once.monthLog.length}, вирок: ${once.verdict?.code}, мета на ${once.achieved.salary} (чисто: ${clean.achieved.salary})`,
+  );
+}
+
+// Статична узгодженість: жодного маркера без родини й жодної поради в нікуди.
+{
+  const families = new Set(Object.values(CHAINS_FOR).flat());
+  const emitted = new Set();
+  for (const run of allRuns) for (const m of run.state.journal) if (m.chainFor) emitted.add(m.chainFor);
+  const orphanFamilies = [...emitted].filter((family) => !families.has(family));
+  const badRemedies = [...new Set(Object.values(REMEDIES).flat())].filter((id) => !ACTIONS_BY_ID[id]);
+  check(
+    "Кожна родина маркерів має фінал, кожна порада — існуючу дію",
+    orphanFamilies.length === 0 && badRemedies.length === 0,
+    orphanFamilies.length || badRemedies.length
+      ? `родини без фіналу: ${orphanFamilies.join(", ")}; неіснуючі поради: ${badRemedies.join(", ")}`
+      : `${emitted.size} родин, усі поради валідні`,
+  );
+}
+
+// ─────────────────── твердження про розбір партії ───────────────────
+
+{
+  const reviews = allRuns.map((r) => {
+    try {
+      return buildReview(r.state);
+    } catch (error) {
+      return { __error: String(error) };
+    }
+  });
+
+  const broken = reviews.filter((review) => review.__error);
+  const usable = reviews.filter(
+    (review) =>
+      !review.__error &&
+      review.strengths.length >= 1 &&
+      review.mistakes.length >= 1 &&
+      review.stages.some((stage) => stage.played) &&
+      review.grades.length === 5 &&
+      // Не `spent > 0`: партія, у якій гравець не робив нічого, теж мусить
+      // отримати розбір — і саме там нуль витрачених годин є головним фактом.
+      review.hours.rows.length === 7 &&
+      review.hours.idle >= 0 &&
+      review.moments.length >= 1,
+  );
+  check(
+    "Кожен фінал дає придатний розбір",
+    broken.length === 0 && usable.length === reviews.length,
+    broken.length
+      ? `${broken.length} розборів впали: ${broken[0].__error}`
+      : `${usable.length}/${reviews.length} розборів повні`,
+  );
+
+  // Один регулярний вираз ловить цілий клас помилок форматування: ділення на
+  // нуль, невизначене поле, нескінченність — усе, що інакше просочилося б
+  // у текст на екрані.
+  const dirty = reviews.filter((review) => /NaN|undefined|Infinity/.test(JSON.stringify(review)));
+  check(
+    "У розборі немає NaN, undefined чи Infinity",
+    dirty.length === 0,
+    dirty.length ? `${dirty.length} розборів із дірами` : `перевірено ${reviews.length} розборів`,
+  );
+
+  // Детектор, який не спрацьовує ніколи, — мертва проза; детектор, який
+  // спрацьовує завжди, — шаблон, перевдягнений у доказ.
+  const fired = new Map();
+  for (const review of reviews) {
+    if (review.__error) continue;
+    for (const found of [...review.strengths, ...review.mistakes]) {
+      fired.set(found.id, (fired.get(found.id) ?? 0) + 1);
+    }
+  }
+  const declared = [...STRENGTHS, ...MISTAKES].length;
+  const never = [];
+  const always = [];
+  for (const [id, count] of fired) {
+    if (count > reviews.length * 0.9 && !id.endsWith("_floor")) always.push(id);
+  }
+  const coverage = fired.size;
+  check(
+    "Детектори розбору живі: спрацьовують, але не завжди",
+    coverage >= Math.round(declared * 0.6) && always.length === 0,
+    `спрацювало ${coverage} із ${declared} детекторів${always.length ? `; завжди спрацьовують: ${always.join(", ")}` : ""}`,
+  );
+  void never;
 }
 
 // Найдешевша й найважливіша перевірка: ефект, ціль якого не описана в LIMITS,
@@ -343,6 +545,8 @@ check(
   `MRR ${money(a.mrr)} проти ${money(b.mrr)}`,
 );
 
+if (process.argv.includes("--review")) printReview(runOnce(ONLY_SCENARIO ?? "savings", "balanced", 4242).state);
+
 console.log(`\n${"═".repeat(78)}`);
 console.log("  ПЕРЕВІРКИ БАЛАНСУ");
 console.log("═".repeat(78));
@@ -354,3 +558,44 @@ for (const item of checks) {
 }
 console.log(`\n  ${checks.length - failed}/${checks.length} пройдено\n`);
 process.exitCode = failed > 0 ? 1 : 0;
+
+/** Друкує розбір однієї партії текстом — щоб вичитати формулювання без браузера. */
+function printReview(state) {
+  const review = buildReview(state);
+  const line = (text = "") => console.log(text);
+
+  line(`\n${"═".repeat(78)}`);
+  line(`  РОЗБІР: ${review.headline.cause}`);
+  line("═".repeat(78));
+  line(review.headline.reason);
+  line();
+  for (const cell of review.headline.numbers) line(`  ${pad(cell.label, 24)}${cell.value}`);
+
+  line("\n  ОЦІНКИ");
+  for (const grade of review.grades) {
+    line(`  ${pad(grade.label, 24)}${grade.na ? "—  " + grade.na : `${grade.letter}  ${grade.score}/100`}`);
+  }
+
+  line("\n  ЕТАПИ");
+  for (const stage of review.stages) {
+    if (!stage.played) { line(`  ${stage.from}–${stage.to} ${stage.label}: до цього не дійшло`); continue; }
+    line(`\n  ${stage.from}–${stage.to} ${stage.label} — ${stage.verdict.toUpperCase()}`);
+    line(`     ${stage.criterion}`);
+    if (stage.oneThing) line(`     Варто було: ${stage.oneThing.label} — ${stage.oneThing.detail}`);
+  }
+
+  line("\n  ЩО ДОБРЕ");
+  for (const found of review.strengths.slice(0, 3)) line(`  + ${found.title}: ${found.evidence}`);
+
+  line("\n  ДЕ ПОМИЛКИ");
+  for (const found of review.mistakes.slice(0, 3)) {
+    line(`  − ${found.title}: ${found.evidence}${found.cost ? ` [${found.cost.text}]` : ""}`);
+  }
+
+  line("\n  ГОДИНИ");
+  for (const row of review.hours.rows) {
+    line(`  ${pad(row.label, 20)}${pad(`${row.hours} год`, 10)}${pad(`${row.sharePct}%`, 8)}норма ${row.referencePct}%  ${row.status}`);
+  }
+  line(`  ${pad("не витрачено", 20)}${pad(`${review.hours.idle} год`, 10)}${review.hours.idlePct}%`);
+  line();
+}

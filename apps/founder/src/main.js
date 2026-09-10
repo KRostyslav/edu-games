@@ -7,11 +7,13 @@ import { createStorage } from "@edu/sim-core";
 import { SCENARIOS, SCENARIO_LIST } from "./data/scenarios.js";
 import { createInitialState, scenarioOf } from "./game/model.js";
 import { createMonthEngine } from "./game/month.js";
+import { repairSave } from "./game/migrate.js";
 import { drawScene, SCENE } from "./render/scene.js";
 import { createMonthPanel, MONTH_NAMES } from "./ui/monthPanel.js";
 import { openDebrief } from "./ui/debrief.js";
 import { openYearReport } from "./ui/yearReport.js";
-import { openAutopsy } from "./ui/autopsy.js";
+import { openOffer, openGoalReached } from "./ui/offer.js";
+import { mountFinale } from "./ui/finale.js";
 import { openCodex } from "./ui/codex.js";
 
 const storage = createStorage("founder", 1);
@@ -22,7 +24,8 @@ const panelHost = document.getElementById("panel");
 const monthLabel = document.getElementById("month-name");
 const mrrLabel = document.getElementById("mrr");
 
-const view = createPixelCanvas({ width: SCENE.width, height: SCENE.height, parent: sceneHost, maxScale: 4 });
+const layout = document.querySelector(".layout");
+let view = createPixelCanvas({ width: SCENE.width, height: SCENE.height, parent: sceneHost, maxScale: 4 });
 
 let season = null;
 let panel = null;
@@ -36,7 +39,9 @@ function boot() {
 
   const saved = storage.load();
   if (saved?.state && SCENARIOS[saved.state.scenarioId]) {
-    start(saved.state, saved.seed ?? 1);
+    // Ремонт запускається на кожному завантаженні, а не лише на підозрілих:
+    // саме це робить його ідемпотентним і лишає один шлях виконання.
+    start(repairSave(saved.state), saved.seed ?? 1);
     return;
   }
   openStartScreen();
@@ -98,41 +103,125 @@ function openStartScreen() {
 
 function start(state, seed) {
   season = createMonthEngine({ initialState: state, seed });
+  app.dataset.ready = "true";
+
+  // Завершену партію не відкриваємо панеллю взагалі: фінал замінює гру,
+  // а не лягає поверх неї вікном, яке можна закрити й грати далі.
+  if (state.verdict?.over) {
+    showFinale();
+    return;
+  }
 
   panelHost.replaceChildren();
   panel = createMonthPanel({ root: panelHost, onAdvance: advanceMonth });
 
   lastEvent = null;
-  app.dataset.ready = "true";
   refresh();
+}
 
-  if (state.verdict?.over) {
-    openAutopsy({ state: season.engine.state, onRestart: restart });
-  }
+/** Показує фінал замість гри. */
+function showFinale() {
+  // Інакше ResizeObserver усередині канви стежив би за від'єднаним вузлом.
+  view?.destroy?.();
+  view = null;
+  panel = null;
+  mountFinale({ root: layout, state: season.engine.state, onRestart: restart });
+
+  const state = season.engine.state;
+  monthLabel.textContent = state.verdict?.cause ?? "Партію завершено";
+  mrrLabel.textContent = `MRR $${Math.round(state.biz.mrr).toLocaleString("uk-UA")} · ${state.monthLog.length} міс.`;
 }
 
 function advanceMonth(actions) {
   const turn = season.playMonth(actions);
-  lastEvent = turn.event;
+  if (turn.noop) return;
 
+  lastEvent = turn.event;
   save();
   refresh();
 
-  openDebrief({
-    turn,
-    onClose: () => {
-      if (turn.isOver) {
-        openAutopsy({ state: season.engine.state, onRestart: restart });
-        return;
-      }
-      if (turn.isYearEnd) {
-        openYearReport({ state: season.engine.state, onContinue: () => panel.resetDeltas() });
-      }
-    },
-  });
+  openDebrief({ turn, onClose: () => runQueue(buildQueue(turn)) });
+}
+
+/**
+ * Один місяць може бути водночас дванадцятим, нести пропозицію про купівлю
+ * і бути місяцем перемоги. Тому це черга, а не ланцюг `if`: кожен крок
+ * відкриває наступний, і жоден екран не губиться.
+ */
+function buildQueue(turn) {
+  if (turn.isOver) return [showFinale];
+
+  const queue = [];
+  const state = season.engine.state;
+
+  if (state.pending) {
+    queue.push((next) =>
+      openOffer({
+        state,
+        onAccept: () => {
+          season.acceptOffer();
+          save();
+          showFinale();
+        },
+        onDecline: () => {
+          season.declineOffer();
+          save();
+          refresh();
+          next();
+        },
+      }),
+    );
+  }
+
+  const reachedGoal = turn.milestones?.some((m) => m.code === "goal_reached");
+  if (reachedGoal && !state.milestones?.goalOffered) {
+    queue.push((next) =>
+      openGoalReached({
+        state: season.engine.state,
+        onFinish: () => {
+          season.finishNow();
+          save();
+          showFinale();
+        },
+        onContinue: () => {
+          season.markGoalOffered();
+          save();
+          refresh();
+          next();
+        },
+      }),
+    );
+  }
+
+  if (turn.isYearEnd) {
+    queue.push((next) =>
+      openYearReport({
+        state: season.engine.state,
+        onContinue: () => {
+          panel?.resetDeltas();
+          next();
+        },
+      }),
+    );
+  }
+
+  return queue;
+}
+
+function runQueue(queue) {
+  let index = 0;
+  const next = () => {
+    const step = queue[index];
+    index += 1;
+    if (!step) return;
+    if (step.length === 0) step();
+    else step(next);
+  };
+  next();
 }
 
 function refresh() {
+  if (!view || !panel) return;
   const state = season.engine.state;
   drawScene(view.ctx, { state, event: lastEvent });
 
@@ -158,9 +247,7 @@ function restart() {
   yes.addEventListener("click", () => {
     storage.clear?.();
     dialog.hide();
-    panelHost.replaceChildren();
-    app.dataset.ready = "false";
-    openStartScreen();
+    location.reload();
   });
 
   const no = el("button", "btn", "Скасувати");
