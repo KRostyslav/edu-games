@@ -51,6 +51,19 @@ importers:
         specifier: ^6.0.7
         version: 6.4.3
 
+  apps/sysdesign:
+    dependencies:
+      '@edu/pixel-ui':
+        specifier: workspace:*
+        version: link:../../packages/pixel-ui
+      '@edu/sim-core':
+        specifier: workspace:*
+        version: link:../../packages/sim-core
+    devDependencies:
+      vite:
+        specifier: ^6.0.7
+        version: 6.4.3
+
   apps/vineyard:
     dependencies:
       '@edu/pixel-ui':

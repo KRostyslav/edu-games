@@ -1,0 +1,359 @@
+/* Mock interview: список задач, сесія з кроками й таймером, самооцінка. */
+
+.screen[data-mode="mock"] .page {
+  max-width: 1400px;
+}
+
+.mock__intro,
+.mock__resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.mock__intro .text {
+  flex: 1 1 420px;
+  margin: 0;
+}
+
+.mock__resume {
+  border-color: var(--warn);
+}
+
+.mock__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mock__card + .mock__card {
+  margin-top: 0;
+}
+
+.mock__card-title {
+  margin: 0;
+  font-size: 15px;
+}
+
+.mock__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mock__card-prompt {
+  margin: 0;
+  font-size: 12px;
+  flex: 1;
+}
+
+.mock__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mock__actions--end {
+  margin-top: 12px;
+}
+
+.mock__history {
+  margin-top: 12px;
+}
+
+.mock__history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mock__history-item {
+  display: grid;
+  grid-template-columns: 100px 1fr 70px 70px;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px dashed var(--paper-deep);
+}
+
+/* --- сесія --- */
+
+.mock__head {
+  align-items: center;
+}
+
+.mock__back {
+  color: var(--paper-dark);
+  padding-left: 0;
+}
+
+.mock__timer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mock__clock {
+  font-size: 20px;
+  color: var(--paper-light);
+  background: #000;
+  padding: 2px 8px;
+  border: var(--px) solid var(--night-3);
+}
+
+.mock__clock[data-over="true"] {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.mock__plan {
+  font-size: 12px;
+  color: var(--paper-dark);
+}
+
+.mock__plan[data-behind="true"] {
+  color: var(--warn);
+}
+
+.mock__prompt {
+  margin-bottom: 10px;
+}
+
+.mock__prompt-title {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.mock__layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.mock__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 60px;
+}
+
+.mock__step-btn {
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 6px 8px;
+  background: var(--paper);
+  border: var(--px) solid var(--shadow);
+  cursor: pointer;
+}
+
+.mock__step-btn[data-active="true"] {
+  background: var(--paper-light);
+  border-color: var(--accent);
+  outline: var(--px) solid var(--accent);
+}
+
+.mock__step-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.mock__step {
+  min-width: 0;
+}
+
+.mock__step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mock__step-title {
+  margin: 0;
+  font-size: 17px;
+}
+
+.mock__goal {
+  margin: 6px 0 10px;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.mock__block {
+  margin-top: 12px;
+}
+
+.mock__prompts {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.mock__prompts li + li {
+  margin-top: 3px;
+}
+
+.mock__checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mock__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.mock__check input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.mock__notes {
+  width: 100%;
+  font: inherit;
+  padding: 6px;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  resize: vertical;
+}
+
+.mock__reference-text {
+  white-space: pre-wrap;
+  font: inherit;
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: #dde9f1;
+  border: var(--px) solid var(--accent);
+}
+
+.mock__estimate {
+  padding: 8px 10px;
+  background: var(--paper-light);
+  border: 1px solid var(--shadow);
+}
+
+.mock__solution-steps {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.mock__topics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 8px;
+}
+
+.mock__topic {
+  padding: 8px;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+}
+
+.mock__topic[data-chosen="true"] {
+  border-color: var(--accent);
+  grid-column: 1 / -1;
+}
+
+.mock__topic-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mock__topic-title {
+  margin: 0;
+}
+
+.mock__pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.mock__run-result {
+  margin-top: 8px;
+}
+
+.mock__miss {
+  margin: 2px 0;
+  font-size: 12px;
+  color: var(--bad);
+}
+
+/* --- самооцінка --- */
+
+.mock__rubric {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 10px;
+}
+
+.mock__criterion {
+  margin: 0;
+}
+
+.mock__criterion + .mock__criterion {
+  margin-top: 0;
+}
+
+.mock__criterion-title {
+  font-weight: bold;
+  padding: 0 4px;
+}
+
+.mock__note {
+  margin: 4px 0 8px;
+  padding: 6px 8px;
+  background: #dde9f1;
+  border-left: 4px solid var(--accent);
+  font-size: 12px;
+}
+
+.mock__level {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.mock__level input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.mock__pitfalls {
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .mock__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mock__steps {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .mock__step-btn {
+    flex: 0 0 auto;
+  }
+
+  .mock__history-item {
+    grid-template-columns: 1fr 1fr;
+  }
+}

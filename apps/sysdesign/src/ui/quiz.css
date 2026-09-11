@@ -1,0 +1,729 @@
+/*
+ * Екран «Картки»: сесія Leitner, теми, статистика.
+ *
+ * Картка — паперова панель на нічному тлі, як решта гри. Стан живе в data-*:
+ * data-state (idle|correct|wrong) на картці й варіантах, data-phase на
+ * картці, data-level на темах. Так JS лише ставить атрибут, а вигляд
+ * вирішує CSS — і тести DOM можуть перевіряти стан без класів-модифікаторів.
+ *
+ * Кольори — лише змінні теми: правильне/хибне позначаємо рамкою й маркером,
+ * а текст лишаємо чорнильним, бо світлий текст на --good читається погано.
+ */
+
+.quiz:focus,
+.quiz__card:focus,
+.quiz__answer:focus {
+  outline: none;
+}
+
+/* Бейдж у базових стилях — inline-block, і це перебиває [hidden]. */
+.quiz .tabs__badge[hidden] {
+  display: none;
+}
+
+.quiz__lead {
+  margin: 0 auto 12px;
+  max-width: 720px;
+  color: var(--paper-dark);
+}
+
+/* --- сцена сесії --- */
+
+.quiz__stage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.quiz__crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  color: var(--paper-light);
+}
+
+.quiz__crumb {
+  font-weight: bold;
+}
+
+/* Ghost-кнопка в базі чорнильна — на нічному тлі її не видно. */
+.quiz__back {
+  color: var(--paper-light);
+  border-color: var(--night-3);
+}
+
+.quiz__back:hover:not(:disabled) {
+  background: var(--night-2);
+}
+
+.quiz__progress {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--paper);
+}
+
+.quiz__counter {
+  font-weight: bold;
+  color: var(--paper-light);
+  white-space: nowrap;
+}
+
+.quiz__track {
+  height: 10px;
+  background: var(--night-2);
+  border: var(--px) solid var(--shadow);
+}
+
+.quiz__fill {
+  height: 100%;
+  background: var(--accent-light);
+  transition: width 0.2s steps(6);
+}
+
+.quiz__tally {
+  color: var(--led);
+  white-space: nowrap;
+}
+
+/* --- картка --- */
+
+.quiz__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  /* Щоб sticky-topbar не накривав верх картки після прокрутки до неї. */
+  scroll-margin-top: 72px;
+}
+
+.quiz__card[data-state="correct"] {
+  box-shadow: inset 6px 0 0 var(--good), 4px 4px 0 var(--shadow);
+}
+
+.quiz__card[data-state="wrong"] {
+  box-shadow: inset 6px 0 0 var(--bad), 4px 4px 0 var(--shadow);
+}
+
+.quiz__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.quiz__kind {
+  margin-left: auto;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.quiz__question {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.quiz__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --- варіанти відповіді --- */
+
+.quiz__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.quiz__option {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  box-shadow: inset -2px -2px 0 var(--paper-dark);
+  cursor: pointer;
+}
+
+.quiz__option:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.quiz__option:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: inset 2px 2px 0 var(--paper-dark);
+}
+
+.quiz__option:disabled {
+  cursor: default;
+}
+
+.quiz__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  font-size: 12px;
+  font-weight: bold;
+  background: var(--paper-dark);
+  border: 1px solid var(--shadow);
+}
+
+.quiz__option-text {
+  padding-top: 2px;
+}
+
+.quiz__option[data-state="correct"] {
+  border-color: var(--good);
+  box-shadow: inset 0 0 0 2px var(--good);
+}
+
+.quiz__option[data-state="correct"] .quiz__key {
+  background: var(--good);
+  color: var(--paper-light);
+}
+
+.quiz__option[data-state="wrong"] {
+  border-color: var(--bad);
+  box-shadow: inset 0 0 0 2px var(--bad);
+}
+
+.quiz__option[data-state="wrong"] .quiz__key {
+  background: var(--bad);
+  color: var(--paper-light);
+}
+
+.quiz__option[data-state="dim"] {
+  color: var(--muted);
+  background: var(--paper);
+  box-shadow: none;
+}
+
+/* --- розбір відповіді --- */
+
+.quiz__feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+}
+
+.quiz__feedback[data-state="correct"] {
+  border-color: var(--good);
+}
+
+.quiz__feedback[data-state="wrong"] {
+  border-color: var(--bad);
+}
+
+.quiz__verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: bold;
+}
+
+.quiz__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--paper-light);
+  background: var(--good);
+  border: 1px solid var(--shadow);
+}
+
+.quiz__feedback[data-state="wrong"] .quiz__mark {
+  background: var(--bad);
+}
+
+.quiz__move {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.quiz__explain {
+  margin: 0;
+}
+
+/* --- усна картка --- */
+
+.quiz__answer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: var(--px) dashed var(--paper-deep);
+  scroll-margin-top: 72px;
+}
+
+.quiz__answer-label {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.quiz__answer .text {
+  margin: 0;
+}
+
+.quiz__rate[data-tone="good"] {
+  box-shadow: inset 0 -4px 0 var(--good);
+}
+
+.quiz__rate[data-tone="bad"] {
+  box-shadow: inset 0 -4px 0 var(--bad);
+}
+
+/* --- дії та підказки --- */
+
+.quiz__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.quiz__actions > .btn--ghost:first-child {
+  margin-right: auto;
+}
+
+.quiz__hint {
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  color: var(--paper-dark);
+}
+
+.quiz__kbd {
+  display: inline-block;
+  min-width: 18px;
+  margin: 0 2px;
+  padding: 0 4px;
+  font: inherit;
+  text-align: center;
+  color: var(--paper-light);
+  border: 1px solid var(--paper-dark);
+  border-bottom-width: var(--px);
+}
+
+/* Клавіатурні підказки на сенсорному екрані лише займають місце. */
+@media (hover: none) {
+  .quiz__hint {
+    display: none;
+  }
+}
+
+/* --- підсумок і порожній стан --- */
+
+.quiz__title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.quiz__score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.quiz__score-num {
+  font-size: 32px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.quiz__facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.quiz__fact,
+.quiz__tile {
+  padding: 8px 10px;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+}
+
+.quiz__fact-value,
+.quiz__tile-value {
+  display: block;
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.quiz__fact-label,
+.quiz__tile-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
+.quiz__tile-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.quiz__next {
+  margin: 0;
+}
+
+.quiz__reread {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.quiz__empty {
+  align-items: center;
+  text-align: center;
+}
+
+.quiz__empty .text {
+  margin: 0 auto;
+}
+
+.quiz__seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--paper-light);
+  background: var(--good);
+  border: var(--px) solid var(--shadow);
+  box-shadow: inset -4px -4px 0 var(--shadow);
+}
+
+.quiz__suggest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* --- теми --- */
+
+.quiz__groups {
+  display: grid;
+  gap: 12px;
+}
+
+.quiz__groups > .panel + .panel {
+  margin-top: 0;
+}
+
+.quiz__group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+}
+
+.quiz__group-head .section__title {
+  margin: 0;
+}
+
+.quiz__group-sum {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.quiz__topics {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.quiz__topic {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  box-shadow: inset -2px -2px 0 var(--paper-dark);
+  cursor: pointer;
+}
+
+.quiz__topic:hover {
+  border-color: var(--accent);
+}
+
+.quiz__topic:active {
+  transform: translate(1px, 1px);
+  box-shadow: inset 2px 2px 0 var(--paper-dark);
+}
+
+.quiz__topic-title {
+  font-weight: bold;
+}
+
+.quiz__topic-count {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.quiz__topic[data-level="done"] .quiz__topic-count {
+  color: var(--ink);
+  font-weight: bold;
+}
+
+/* Смужка зібрана зі span (кнопка не може містити div), тож блоковість задаємо явно. */
+.quiz__mini {
+  display: block;
+  grid-column: 1 / -1;
+  height: 6px;
+  background: var(--paper-deep);
+  border: 1px solid var(--shadow);
+}
+
+.quiz__mini-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.quiz__topic[data-level="done"] .quiz__mini-fill,
+.quiz__row[data-level="done"] .quiz__mini-fill {
+  background: var(--good);
+}
+
+/* --- статистика --- */
+
+.quiz__stats {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.quiz__stats > .panel + .panel {
+  margin-top: 0;
+}
+
+.quiz__stats-wide {
+  grid-column: 1 / -1;
+}
+
+.quiz__hist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quiz__col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.quiz__col-value {
+  font-weight: bold;
+}
+
+.quiz__col-plot {
+  display: flex;
+  align-items: flex-end;
+  height: 140px;
+  border-bottom: var(--px) solid var(--shadow);
+}
+
+.quiz__col-bar {
+  width: 100%;
+  background: var(--accent);
+  border: var(--px) solid var(--shadow);
+  border-bottom: 0;
+}
+
+.quiz__col-bar[data-empty="true"] {
+  border: 0;
+}
+
+.quiz__col[data-box="new"] .quiz__col-bar {
+  background: var(--paper-deep);
+}
+
+.quiz__col[data-box="1"] .quiz__col-bar {
+  background: var(--bad);
+}
+
+.quiz__col[data-box="2"] .quiz__col-bar {
+  background: var(--warn);
+}
+
+.quiz__col[data-box="4"] .quiz__col-bar,
+.quiz__col[data-box="5"] .quiz__col-bar {
+  background: var(--good);
+}
+
+.quiz__col-label {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.quiz__col-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.quiz__caption {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.quiz__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.quiz__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.quiz__row {
+  display: grid;
+  grid-template-columns: minmax(0, 11em) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.quiz__row .quiz__mini {
+  grid-column: auto;
+  height: 10px;
+  border-width: var(--px);
+}
+
+.quiz__row-value {
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* --- вузькі екрани до 360px --- */
+
+@media (max-width: 760px) {
+  .quiz__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz__card {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .quiz__question {
+    font-size: 15px;
+  }
+
+  .quiz__option {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .quiz__key {
+    width: 24px;
+  }
+
+  /* Великі цілі для пальця: кнопки дій на всю ширину, «Далі» — найближче до пальця, знизу. */
+  .quiz__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .quiz__actions > .btn--ghost:first-child {
+    margin-right: 0;
+  }
+
+  .quiz__actions .btn {
+    padding: 10px 12px;
+  }
+
+  .quiz__topics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quiz__hist {
+    gap: 4px;
+  }
+
+  .quiz__col-plot {
+    height: 110px;
+  }
+
+  .quiz__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .quiz__row .quiz__mini {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

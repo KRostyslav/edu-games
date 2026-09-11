@@ -1,0 +1,311 @@
+/*
+ * Базові стилі «Архітектора систем»: тема, каркас, спільні дрібниці.
+ * Стилі конкретних екранів живуть поруч з ними (hub.css, builder.css, quiz.css…),
+ * щоб правка одного екрана не зачіпала інші.
+ *
+ * Тло — нічна серверна, панелі — той самий «папір», що й у решти ігор монорепи:
+ * так гра впізнається як частина сімейства, але має власний настрій.
+ */
+
+:root {
+  --accent: #2f6f8f;
+  --accent-dark: #1f4d63;
+  --accent-light: #5a9bbb;
+  --night: #131b24;
+  --night-2: #1b2632;
+  --night-3: #26374a;
+  --grid-line: #22303f;
+  --led: #57d18b;
+  --paper-light: #f2e9d2;
+  --muted: #6b5f4c;
+  --info: #3f7fb0;
+  --radius: 0;
+}
+
+body {
+  background: var(--night);
+  min-height: 100vh;
+}
+
+.btn--primary {
+  background: var(--accent);
+  box-shadow: inset -2px -2px 0 var(--accent-dark), inset 2px 2px 0 var(--accent-light);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #367d9f;
+}
+
+.modal--wide {
+  max-width: 1080px;
+}
+
+/* --- каркас --- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 14px;
+  background: var(--night-2);
+  border-bottom: var(--px) solid #000;
+  color: var(--paper);
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  color: var(--paper-light);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.topbar__logo {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tabs__tab {
+  font: inherit;
+  color: var(--paper);
+  background: transparent;
+  border: var(--px) solid transparent;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.tabs__tab:hover {
+  border-color: var(--night-3);
+}
+
+.tabs__tab[aria-current="page"],
+.tabs__tab[aria-selected="true"] {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: #000;
+}
+
+.tabs__badge {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 4px;
+  padding: 0 4px;
+  background: var(--warn);
+  color: var(--ink);
+  font-size: 11px;
+  text-align: center;
+}
+
+.topbar__stats {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--paper-dark);
+}
+
+.screen {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- сторінки й панелі --- */
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 16px 14px 48px;
+}
+
+.page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+  color: var(--paper);
+}
+
+.page__title {
+  margin: 0;
+  font-size: 20px;
+  color: var(--paper-light);
+}
+
+.page__lead {
+  margin: 4px 0 0;
+  max-width: 70ch;
+  color: var(--paper-dark);
+}
+
+.panel {
+  background: var(--paper);
+  border: var(--px) solid var(--shadow);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  padding: 12px;
+}
+
+.panel + .panel {
+  margin-top: 12px;
+}
+
+.section + .section {
+  margin-top: 14px;
+}
+
+.section__title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+
+.text {
+  margin: 0 0 8px;
+  max-width: 75ch;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+/* --- дрібні віджети --- */
+
+.chip {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 11px;
+  border: 1px solid var(--shadow);
+  background: var(--paper-dark);
+  white-space: nowrap;
+}
+
+.chip[data-tone="good"] {
+  background: #bfe0b2;
+}
+
+.chip[data-tone="warn"] {
+  background: #f0d59a;
+}
+
+.chip[data-tone="bad"] {
+  background: #e8a99e;
+}
+
+.chip[data-tone="info"] {
+  background: #b7d3e6;
+}
+
+.stars {
+  color: var(--warn);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.stars[data-count="0"] {
+  color: var(--paper-deep);
+}
+
+.notice {
+  padding: 8px 10px;
+  border: var(--px) solid var(--shadow);
+  background: var(--paper-light);
+}
+
+.notice[data-tone="good"] {
+  border-color: var(--good);
+}
+
+.notice[data-tone="warn"] {
+  border-color: var(--warn);
+}
+
+.notice[data-tone="bad"] {
+  border-color: var(--bad);
+}
+
+.meter {
+  margin-bottom: 6px;
+}
+
+.meter__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.meter__track {
+  height: 8px;
+  background: var(--paper-deep);
+  border: 1px solid var(--shadow);
+}
+
+.meter__fill {
+  height: 100%;
+  background: var(--good);
+}
+
+.meter__fill[data-level="warn"] {
+  background: var(--warn);
+}
+
+.meter__fill[data-level="over"] {
+  background: var(--bad);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: var(--px) solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar__stats {
+    margin-left: 0;
+    width: 100%;
+  }
+}

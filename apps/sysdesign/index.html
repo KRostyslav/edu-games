@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🏗️</text></svg>"
+    />
+    <title>Архітектор систем — System Design для співбесід</title>
+    <meta
+      name="description"
+      content="Піксельна гра-конструктор для підготовки до System Design-співбесід: CDN, кеш, бази, черги, rate limiting, регіони. Кампанія з інцидентами, довідник, картки, тренажер оцінок і mock interview."
+    />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <header class="topbar">
+        <a class="topbar__brand" href="#/campaign"><span aria-hidden="true">🏗️</span> Архітектор систем</a>
+        <nav class="tabs" aria-label="Розділи">
+          <button type="button" class="tabs__tab" data-mode="campaign">Кампанія</button>
+          <button type="button" class="tabs__tab" data-mode="codex">Довідник</button>
+          <button type="button" class="tabs__tab" data-mode="cards">
+            Картки<span class="tabs__badge" id="due-badge" hidden></span>
+          </button>
+          <button type="button" class="tabs__tab" data-mode="estimate">Оцінки</button>
+          <button type="button" class="tabs__tab" data-mode="mock">Співбесіда</button>
+        </nav>
+        <div class="topbar__stats">
+          <span id="stars-total" title="Зірки кампанії"></span>
+          <span id="read-total" title="Прочитано статей довідника"></span>
+        </div>
+      </header>
+      <main class="screen" id="screen"></main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

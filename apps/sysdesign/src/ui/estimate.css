@@ -1,0 +1,633 @@
+/*
+ * Екран «Оцінки на серветці» (src/ui/estimate.js).
+ *
+ * Лише змінні теми й піксельні рамки: жодних радіусів, градієнтів і «своїх»
+ * кольорів — екран має виглядати як решта гри. Стан живе в data-* атрибутах
+ * (data-status картки, data-stars поля, data-mode шпаргалки), тож JS не
+ * перемикає класи, а CSS не знає про логіку оцінювання.
+ *
+ * Кольори --good/--warn/--bad на папері мають замалий контраст для тексту,
+ * тому ними фарбуємо лише рамки й смуги, а текст лишається --ink/--muted.
+ */
+
+/* Атрибут hidden має вигравати в display: flex/grid нижче. */
+.est [hidden] {
+  display: none;
+}
+
+/* Липкий topbar інакше перекрив би заголовок, до якого переходить фокус. */
+.est,
+.est__title,
+.est__result,
+.est__field {
+  scroll-margin-top: 64px;
+}
+
+/* --- каркас: шпаргалка зверху на мобільному, праворуч на десктопі --- */
+
+.est__layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.est__main {
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .est__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas: "main sheet";
+    align-items: start;
+    gap: 16px;
+  }
+
+  .est__main {
+    grid-area: main;
+  }
+
+  .est__sheet {
+    grid-area: sheet;
+    position: sticky;
+    top: 56px;
+    max-height: calc(100vh - 72px);
+    overflow-y: auto;
+  }
+}
+
+/* --- вступ --- */
+
+.est__intro-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.est__tips {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  list-style: square;
+  max-width: 75ch;
+}
+
+.est__tips li + li {
+  margin-top: 4px;
+}
+
+.est__intro-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.est__missing {
+  margin: 0 0 12px;
+}
+
+/* --- групи й картки --- */
+
+.est__group {
+  margin-top: 22px;
+}
+
+.est__group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: var(--px) solid var(--night-2);
+}
+
+.est__group-title {
+  margin: 0;
+  font-size: 16px;
+  color: var(--paper-light);
+}
+
+.est__group-score {
+  font-size: 12px;
+  color: var(--paper-dark);
+  white-space: nowrap;
+}
+
+.est__group-lead {
+  margin: 0 0 10px;
+  max-width: 75ch;
+  font-size: 12px;
+  color: var(--paper-dark);
+}
+
+.est__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--paper);
+  border: var(--px) solid var(--shadow);
+  /* Смуга зверху — стан задачі одним поглядом; товщина однакова, щоб картки не стрибали. */
+  border-top: 6px solid var(--paper-deep);
+}
+
+.est__card[data-status="solved"] {
+  border-top-color: var(--warn);
+}
+
+.est__card[data-status="mastered"] {
+  border-top-color: var(--good);
+}
+
+.est__card-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.est__card-title {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: break-word;
+}
+
+.est__card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 12px;
+}
+
+.est__attempts {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.est__card-foot {
+  margin-top: auto;
+  display: flex;
+}
+
+/* --- задача --- */
+
+.est__task-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.est__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.est__best {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.est__best-label {
+  color: var(--muted);
+}
+
+.est__title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  overflow-wrap: break-word;
+}
+
+.est__title:focus {
+  outline: none;
+}
+
+.est__title:focus-visible {
+  outline: var(--px) solid var(--accent);
+  outline-offset: 2px;
+}
+
+.est__prompt {
+  margin: 0 0 12px;
+  max-width: 75ch;
+  font-size: 14px;
+  overflow-wrap: break-word;
+}
+
+.est__assumption-list {
+  margin: 0;
+  padding-left: 18px;
+  list-style: square;
+  max-width: 75ch;
+}
+
+.est__assumption-list li + li {
+  margin-top: 3px;
+}
+
+/* --- поля відповіді --- */
+
+.est__scale {
+  margin: 0 0 10px;
+  font-size: 12px;
+  max-width: 75ch;
+}
+
+.est__fields {
+  display: grid;
+  /* min(): на 360px одна колонка без горизонтальної прокрутки. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  align-items: start;
+  gap: 10px;
+}
+
+.est__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px;
+  border: var(--px) solid var(--paper-deep);
+}
+
+.est__field[data-state="invalid"],
+.est__field[data-stars="0"] {
+  border-color: var(--bad);
+}
+
+.est__field[data-stars="1"] {
+  border-color: var(--warn);
+}
+
+.est__field[data-stars="2"],
+.est__field[data-stars="3"] {
+  border-color: var(--good);
+}
+
+.est__label {
+  font-weight: bold;
+}
+
+.est__control {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.est__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  border-radius: 0;
+  appearance: none;
+}
+
+.est__input[readonly] {
+  background: var(--paper-dark);
+}
+
+.est__input[aria-invalid="true"] {
+  border-color: var(--bad);
+}
+
+.est__unit {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  background: var(--paper-dark);
+  border: var(--px) solid var(--shadow);
+  border-left: 0;
+}
+
+.est__hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.est__error {
+  margin: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+  background: var(--paper-light);
+  border-left: 6px solid var(--bad);
+  overflow-wrap: break-word;
+}
+
+.est__verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--paper-deep);
+}
+
+.est__verdict-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+}
+
+.est__dev {
+  font-weight: bold;
+}
+
+.est__dev[data-dir="over"]::before {
+  content: "▲ ";
+}
+
+.est__dev[data-dir="under"]::before {
+  content: "▼ ";
+}
+
+.est__compare {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 8px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.est__compare dt {
+  color: var(--muted);
+}
+
+.est__compare dd {
+  margin: 0;
+  font-weight: bold;
+  overflow-wrap: break-word;
+}
+
+.est__miss {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.est__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.est__status {
+  flex: 1 1 200px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.est__status:empty {
+  display: none;
+}
+
+/* --- результат --- */
+
+.est__result:focus {
+  outline: none;
+}
+
+.est__result:focus-visible {
+  outline: var(--px) solid var(--accent);
+  outline-offset: 2px;
+}
+
+.est__result[data-stars="0"] {
+  border-left: 6px solid var(--bad);
+}
+
+.est__result[data-stars="1"] {
+  border-left: 6px solid var(--warn);
+}
+
+.est__result[data-stars="2"],
+.est__result[data-stars="3"] {
+  border-left: 6px solid var(--good);
+}
+
+.est__result-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 6px;
+}
+
+.est__result-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.est__result-head .stars {
+  font-size: 20px;
+}
+
+.est__summary {
+  margin: 0 0 12px;
+  max-width: 75ch;
+}
+
+.est__steps {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+/* Піксельний лічильник кроку замість звичайних «1.» — так розбір читається як дошка. */
+.est__step {
+  position: relative;
+  min-height: 26px;
+  padding: 3px 0 3px 34px;
+  max-width: 80ch;
+  overflow-wrap: break-word;
+  counter-increment: step;
+}
+
+.est__step + .est__step {
+  margin-top: 4px;
+}
+
+.est__step::before {
+  content: counter(step);
+  position: absolute;
+  top: 2px;
+  left: 0;
+  width: 24px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--paper-light);
+  background: var(--ink);
+}
+
+.est__takeaway {
+  max-width: 80ch;
+}
+
+/* --- шпаргалка --- */
+
+.est__sheet-box {
+  background: var(--paper);
+  border: var(--px) solid var(--shadow);
+}
+
+.est__sheet-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 8px 10px;
+  font-weight: bold;
+  background: var(--paper-dark);
+  cursor: pointer;
+  list-style: none;
+}
+
+.est__sheet-summary::-webkit-details-marker {
+  display: none;
+}
+
+.est__sheet-summary::before {
+  content: "▸";
+}
+
+.est__sheet-box[open] > .est__sheet-summary {
+  border-bottom: var(--px) solid var(--shadow);
+}
+
+.est__sheet-box[open] > .est__sheet-summary::before {
+  content: "▾";
+}
+
+.est__sheet-sub {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--muted);
+}
+
+/* У режимі бічної панелі summary — просто заголовок, згорнути його не можна. */
+.est__sheet[data-mode="side"] .est__sheet-summary {
+  cursor: default;
+}
+
+.est__sheet[data-mode="side"] .est__sheet-summary::before {
+  content: none;
+}
+
+.est__sheet-body {
+  padding: 10px;
+  font-size: 12px;
+}
+
+.est__table-wrap {
+  overflow-x: auto;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+}
+
+.est__table {
+  width: 100%;
+  min-width: 260px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.est__table th,
+.est__table td {
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--paper-deep);
+}
+
+.est__table thead th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: var(--paper-dark);
+  border-bottom: var(--px) solid var(--shadow);
+}
+
+.est__table tbody th {
+  font-weight: normal;
+}
+
+.est__table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.est__table .est__num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.est__table tbody .est__num {
+  font-weight: bold;
+}
+
+.est__note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.est__rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.est__rule {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--paper-deep);
+}
+
+.est__rule:last-child {
+  border-bottom: 0;
+}
+
+.est__rule-title {
+  display: block;
+}
+
+/* --- вузькі екрани (до 360px) --- */
+
+@media (max-width: 480px) {
+  .est__title {
+    font-size: 15px;
+  }
+
+  .est__prompt {
+    font-size: 13px;
+  }
+
+  .est__actions > .btn {
+    flex: 1 1 auto;
+  }
+
+  .est__card-foot > .btn {
+    flex: 1 1 auto;
+  }
+}

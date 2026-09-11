@@ -1,0 +1,714 @@
+/*
+ * Довідник: стаття (спільна для модалки й повного екрана), навігація, глосарій.
+ *
+ * Стаття — це текст для читання, а не інтерфейс гри, тому тут інші пріоритети:
+ * рядок не ширший за ~72ch і line-height 1.55, щоб абзац про реплікацію можна
+ * було дочитати без втоми. Піксельність тримаємо рамками й квадратними
+ * маркерами, а не дрібним шрифтом.
+ *
+ * Кольори — лише змінні теми: довідник має пережити зміну палітри без правок.
+ */
+
+.codex {
+  /* Висота липкого .topbar із запасом: на неї відступають липка навігація
+     і прокрутка до статті, щоб початок тексту не ховався під шапкою. */
+  --codex-sticky-top: 56px;
+}
+
+/* `hidden` мусить перемагати display: flex/grid наших класів. */
+.codex [hidden],
+.codex__modal [hidden] {
+  display: none !important;
+}
+
+/* ─────────────────────────── стаття ─────────────────────────── */
+
+.codex__article {
+  min-width: 0;
+  line-height: 1.55;
+}
+
+.codex__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.codex__title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+/* Фокус на заголовок ставить скрипт після вибору статті — рамка тут лише заважала б. */
+.codex__title:focus {
+  outline: none;
+}
+
+.codex__lead {
+  max-width: 72ch;
+  margin: 0 0 14px;
+  padding-left: 10px;
+  border-left: calc(var(--px) * 2) solid var(--accent);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.codex__figure {
+  max-width: 100%;
+  margin: 0 0 16px;
+}
+
+.codex__caption {
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Схема — «екран серверної»: темне тло, як у решти гри, і жодних переносів,
+   бо перенесений рядок ASCII-схеми ламає стрілки. Широка — прокручується. */
+.codex__diagram {
+  max-width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  tab-size: 4;
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--paper-light);
+  background: var(--night);
+  border: var(--px) solid var(--shadow);
+}
+
+.codex__article > .codex__block {
+  margin-top: 18px;
+}
+
+.codex__text {
+  max-width: 72ch;
+  margin: 0 0 10px;
+  line-height: 1.55;
+}
+
+.codex__text:last-child {
+  margin-bottom: 0;
+}
+
+.codex__tradeoffs,
+.codex__numbers,
+.codex__points {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 72ch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.55;
+}
+
+.codex__tradeoff {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+/* Квадратний маркер із символом: знак читається й без кольору. */
+.codex__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--paper-light);
+  background: var(--muted);
+  border: var(--px) solid var(--shadow);
+}
+
+.codex__tradeoff[data-tone="good"] .codex__mark {
+  background: var(--good);
+}
+
+.codex__tradeoff[data-tone="bad"] .codex__mark {
+  background: var(--bad);
+}
+
+.codex__bullet {
+  position: relative;
+  padding-left: 16px;
+}
+
+/* Піксельний квадратик замість круглої крапки списку. */
+.codex__bullet::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+
+.codex__callout {
+  padding: 10px 12px 12px 18px;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  box-shadow: inset 6px 0 0 var(--accent);
+}
+
+.codex__callout[data-kind="interview"] .section__title {
+  color: var(--accent);
+}
+
+.codex__callout[data-kind="game"] {
+  box-shadow: inset 6px 0 0 var(--good);
+}
+
+.codex__callout[data-kind="game"] .section__title {
+  color: var(--good);
+}
+
+.codex__callout[data-kind="game"] .codex__bullet::before {
+  background: var(--good);
+}
+
+.codex__related-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.codex__related-link {
+  text-align: left;
+}
+
+.codex__related-label {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ─────────────────────────── модалка ─────────────────────────── */
+
+.codex__modal:focus {
+  outline: none;
+}
+
+.codex__modal-foot {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.codex__foot-related {
+  display: flex;
+  flex: 1 1 320px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.codex__foot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ─────────────────────────── повний довідник ─────────────────────────── */
+
+.codex__heading {
+  min-width: 0;
+}
+
+.codex__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  font-size: 12px;
+  color: var(--paper);
+}
+
+.codex__progress-track {
+  height: 10px;
+  background: var(--night-3);
+  border: var(--px) solid var(--shadow);
+}
+
+.codex__progress-fill {
+  width: 0;
+  height: 100%;
+  background: var(--good);
+}
+
+.codex__tabs {
+  margin-bottom: 12px;
+}
+
+.codex__layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+/* .panel + .panel у базових стилях додає відступ зверху — у сітці він зсунув би статтю. */
+.codex__layout > .panel + .panel {
+  margin-top: 0;
+}
+
+.codex__side {
+  position: sticky;
+  top: var(--codex-sticky-top);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-height: calc(100vh - var(--codex-sticky-top) - 12px);
+  padding: 10px;
+}
+
+.codex__side-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* Навігація прокручується сама, щоб пошук лишався на місці. */
+.codex__nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-right: -6px;
+  padding-right: 6px;
+}
+
+.codex__toggle {
+  display: none;
+}
+
+.codex__main {
+  min-width: 0;
+  padding: 16px 18px 20px;
+  scroll-margin-top: var(--codex-sticky-top);
+}
+
+/* --- пошук --- */
+
+.codex__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.codex__input {
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  border-radius: 0;
+  appearance: none;
+}
+
+.codex__found {
+  margin: 0;
+  font-size: 11px;
+}
+
+.codex__found:empty {
+  display: none;
+}
+
+/* --- групи й посилання --- */
+
+.codex__group + .codex__group {
+  margin-top: 10px;
+}
+
+.codex__group-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding-bottom: 2px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px dashed var(--paper-deep);
+}
+
+.codex__group-count {
+  flex: none;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--paper-deep);
+}
+
+.codex__group[data-complete="true"] .codex__group-count {
+  color: var(--paper-light);
+  background: var(--good);
+  border-color: var(--shadow);
+}
+
+.codex__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.codex__link {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 6px;
+  align-items: baseline;
+  width: 100%;
+  padding: 3px 6px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: var(--px) solid transparent;
+  cursor: pointer;
+}
+
+.codex__link:hover {
+  background: var(--paper-light);
+  border-color: var(--paper-deep);
+}
+
+.codex__link[data-active="true"] {
+  color: var(--paper-light);
+  background: var(--accent);
+  border-color: var(--shadow);
+}
+
+.codex__check {
+  font-weight: bold;
+  color: var(--good);
+}
+
+.codex__link[data-active="true"] .codex__check {
+  color: var(--paper-light);
+}
+
+.codex__home {
+  border-bottom: 1px dashed var(--paper-deep);
+}
+
+.codex__home .codex__check {
+  color: var(--accent);
+}
+
+.codex__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.codex__empty-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --- вступ --- */
+
+.codex__intro {
+  max-width: 88ch;
+}
+
+.codex__intro > .codex__title {
+  margin-bottom: 10px;
+}
+
+.codex__steps {
+  max-width: 72ch;
+  margin: 0 0 16px;
+  padding-left: 22px;
+  line-height: 1.55;
+}
+
+.codex__step + .codex__step {
+  margin-top: 4px;
+}
+
+.codex__resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  max-width: 72ch;
+  margin: 0 0 16px;
+}
+
+.codex__starters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.codex__starter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  box-shadow: 3px 3px 0 var(--shadow);
+  cursor: pointer;
+}
+
+.codex__starter:hover {
+  background: var(--paper);
+}
+
+.codex__starter:active {
+  box-shadow: 1px 1px 0 var(--shadow);
+  transform: translate(2px, 2px);
+}
+
+.codex__starter-group {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.codex__starter-check {
+  color: var(--good);
+}
+
+.codex__starter-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.codex__starter-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* --- глосарій --- */
+
+.codex__glossary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 20px;
+}
+
+.codex__glossary-head .codex__title {
+  margin-bottom: 8px;
+}
+
+.codex__glossary-head .codex__lead {
+  margin-bottom: 0;
+}
+
+.codex__search--glossary {
+  max-width: 420px;
+}
+
+.codex__alphabet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.codex__alphabet-link {
+  min-width: 30px;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  cursor: pointer;
+}
+
+.codex__alphabet-link:hover {
+  color: var(--paper-light);
+  background: var(--accent);
+}
+
+.codex__letter-block + .codex__letter-block {
+  margin-top: 14px;
+}
+
+.codex__letter {
+  display: inline-block;
+  min-width: 30px;
+  margin: 0 0 4px;
+  padding: 2px 8px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--paper-light);
+  background: var(--ink);
+  scroll-margin-top: var(--codex-sticky-top);
+}
+
+.codex__letter:focus {
+  outline: none;
+}
+
+.codex__terms {
+  margin: 0;
+}
+
+.codex__term {
+  display: grid;
+  grid-template-columns: minmax(0, 22ch) minmax(0, 1fr);
+  gap: 2px 16px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--paper-deep);
+}
+
+.codex__term-name {
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.codex__term-def {
+  max-width: 72ch;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.codex__term-ref {
+  padding: 0 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────── вузькі екрани ─────────────────────────── */
+
+@media (max-width: 899.98px) {
+  .codex__progress {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .codex__layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  /* Над статтею навігація вже не липка: вона згортається кнопкою «Зміст». */
+  .codex__side {
+    position: static;
+    max-height: none;
+    padding: 8px;
+  }
+
+  .codex__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    font: inherit;
+    font-weight: bold;
+    color: var(--ink);
+    background: var(--paper-light);
+    border: var(--px) solid var(--shadow);
+    cursor: pointer;
+  }
+
+  .codex__toggle-count {
+    font-weight: normal;
+    color: var(--muted);
+  }
+
+  .codex__side[data-open="true"] .codex__toggle {
+    margin-bottom: 8px;
+  }
+
+  .codex__side[data-open="false"] .codex__side-body {
+    display: none;
+  }
+
+  .codex__nav {
+    max-height: 55vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .codex__main,
+  .codex__glossary {
+    padding: 12px 10px 16px;
+  }
+
+  .codex__title {
+    font-size: 16px;
+  }
+
+  .codex__lead {
+    font-size: 13px;
+  }
+
+  .codex__diagram {
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .codex__term {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* На телефоні футер модалки не має з'їдати статтю: «Пов'язане» прокручується окремо. */
+  .codex__foot-related {
+    max-height: 104px;
+    overflow-y: auto;
+  }
+
+  .codex__foot-actions {
+    width: 100%;
+  }
+
+  .codex__foot-actions .btn {
+    flex: 1 1 auto;
+  }
+}
