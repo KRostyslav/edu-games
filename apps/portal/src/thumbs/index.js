@@ -11,12 +11,14 @@ import { drawVineyard } from "./vineyard.js";
 import { drawPeppers } from "./peppers.js";
 import { drawFounder } from "./founder.js";
 import { drawSysdesign } from "./sysdesign.js";
+import { drawFullstack } from "./fullstack.js";
 
 const THUMBS = {
   vineyard: drawVineyard,
   peppers: drawPeppers,
   founder: drawFounder,
   sysdesign: drawSysdesign,
+  fullstack: drawFullstack,
 };
 
 /** Малювалка гри або `null`, якщо власної ще немає. */

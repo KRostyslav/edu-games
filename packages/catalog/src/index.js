@@ -108,6 +108,24 @@ export const GAMES = [
     accent: "#2f6f8f",
     devPort: 5184,
   },
+  {
+    id: "fullstack",
+    dir: "apps/fullstack",
+    pkg: "@edu/fullstack",
+    title: "По той бік API",
+    subtitle: "RPG-перехід із фронтенду у фулстек: від React до Staff",
+    description:
+      "Піксельна RPG для фронтенд-розробника, що йде в бекенд: Node.js, мережа й HTTP, справжній Postgres " +
+      "у браузері, кеш, черги, безпека й архітектура. Пишіть код і SQL, розслідуйте продакшн-інциденти, " +
+      "перемагайте босів і ростіть від Junior до Staff.",
+    category: "tech",
+    tags: ["RPG", "Backend", "Node.js", "Postgres"],
+    status: "beta",
+    released: "2026-09-12",
+    emoji: "⚔️",
+    accent: "#3c873a",
+    devPort: 5185,
+  },
 ];
 
 // Реєстр перевіряється на імпорті, а не окремим тестом: зламаний каталог має

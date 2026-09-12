@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@edu/pixel-ui": "workspace:*",
-    "@edu/sim-core": "workspace:*"
+    "@edu/sim-core": "workspace:*",
+    "@edu/study-kit": "workspace:*"
   },
   "devDependencies": {
     "vite": "^6.0.7"

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⚔️</text></svg>"
+    />
+    <title>По той бік API — RPG-перехід із фронтенду у фулстек</title>
+    <meta
+      name="description"
+      content="Піксельна RPG для фронтенд-розробника, що йде в бекенд: Node.js, мережа й HTTP, справжній Postgres у браузері, архітектура. Пишіть код і SQL, розслідуйте інциденти, перемагайте босів і ростіть від Junior до Staff."
+    />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <header class="topbar">
+        <a class="topbar__brand" href="#/map"><span aria-hidden="true">⚔️</span> По той бік API</a>
+        <nav class="tabs" aria-label="Розділи">
+          <button type="button" class="tabs__tab" data-mode="map">Мапа</button>
+          <button type="button" class="tabs__tab" data-mode="hero">Герой</button>
+          <button type="button" class="tabs__tab" data-mode="standup">
+            Стендап<span class="tabs__badge" id="due-badge" hidden></span>
+          </button>
+          <button type="button" class="tabs__tab" data-mode="codex">Довідник</button>
+        </nav>
+        <div class="topbar__stats">
+          <span id="grade-label" title="Поточний грейд"></span>
+          <span id="xp-label" title="Досвід і рівень героя"></span>
+          <span id="stars-total" title="Зірки кампанії"></span>
+        </div>
+      </header>
+      <main class="screen" id="screen"></main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

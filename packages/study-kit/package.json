@@ -1,0 +1,16 @@
+{
+  "name": "@edu/study-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Спільні механіки навчання для ігор монорепи: інтервальне повторення Leitner і календарний день",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./leitner": "./src/leitner.js"
+  },
+  "files": ["src"],
+  "scripts": {
+    "lint": "node --check src/index.js"
+  }
+}

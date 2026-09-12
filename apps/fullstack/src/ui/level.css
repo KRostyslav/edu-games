@@ -1,0 +1,104 @@
+.level__crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--paper-dark);
+  margin-bottom: 4px;
+}
+
+.level__crumbs .btn--ghost {
+  color: var(--paper);
+  padding-left: 0;
+}
+
+.level__head .row {
+  gap: 10px;
+}
+
+.level__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 14px;
+  align-items: start;
+}
+
+.level__main {
+  min-width: 0;
+}
+
+.level__aside {
+  background: var(--paper);
+  border: var(--px) solid var(--shadow);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 60px;
+}
+
+.level__aside .section + .section {
+  margin-top: 10px;
+}
+
+.level__goals,
+.level__hints {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}
+
+.level__hints li {
+  margin-bottom: 6px;
+  background: var(--paper-light);
+  padding: 4px 6px;
+  border-left: 3px solid var(--warn);
+}
+
+.level__mistakes {
+  margin: 0;
+  font-size: 12px;
+}
+
+.level__stage {
+  min-height: 200px;
+}
+
+/* --- дебриф --- */
+
+.debrief__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.debrief__top .stars {
+  font-size: 34px;
+}
+
+.debrief__breakdown {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.debrief__bridge {
+  background: #e4eef6;
+  border-left: 4px solid #61dafb;
+  padding: 8px 10px;
+}
+
+@media (max-width: 900px) {
+  .level__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .level__aside {
+    position: static;
+    order: 2;
+  }
+}

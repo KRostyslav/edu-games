@@ -1,0 +1,51 @@
+/** Вузли дерева навичок акту «Мережа та HTTP». */
+export const SKILLS = [
+  {
+    id: "net-transport",
+    act: "http",
+    title: "Транспорт і шифрування",
+    summary: "Що відбувається до першого байта запиту: TCP, TLS 1.3 і різниця між HTTP/1.1, HTTP/2 та HTTP/3.",
+    levels: ["net-tls", "net-http-versions"],
+    topics: ["tcp-basics", "tls", "http-versions"],
+  },
+  {
+    id: "net-wire",
+    act: "http",
+    title: "HTTP на дроті",
+    summary: "Стартовий рядок, заголовки, фреймування тіла й умовні запити: ETag, 304 і Cache-Control.",
+    levels: ["net-wire", "net-caching"],
+    topics: ["http-anatomy", "http-caching"],
+  },
+  {
+    id: "net-browser",
+    act: "http",
+    title: "Браузер і CORS",
+    summary: "Preflight, credentials, Vary: Origin — і чому CORS захищає користувача, а не ваш API.",
+    levels: ["net-cors"],
+    topics: ["cors"],
+  },
+  {
+    id: "net-api-design",
+    act: "http",
+    title: "Дизайн API",
+    summary: "Ресурси, методи й статуси за RFC 9110, пагінація, що не ламається на мільйонах рядків.",
+    levels: ["net-rest-design", "net-pagination"],
+    topics: ["rest-design", "pagination"],
+  },
+  {
+    id: "net-reliability",
+    act: "http",
+    title: "Надійність запитів",
+    summary: "Idempotency-Key, повтори з jitter, бюджети таймаутів — щоб збій однієї ланки не став штормом.",
+    levels: ["net-idempotency", "net-timeouts"],
+    topics: ["idempotency", "retries-backoff", "timeouts"],
+  },
+  {
+    id: "net-connections",
+    act: "http",
+    title: "З'єднання і реалтайм",
+    summary: "Keep-alive за балансувальником і довгоживучі з'єднання: WebSocket, SSE, long polling.",
+    levels: ["net-keepalive", "net-realtime"],
+    topics: ["keep-alive", "realtime"],
+  },
+];

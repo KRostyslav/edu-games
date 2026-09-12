@@ -1,0 +1,296 @@
+.boss__intro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+  border-color: var(--boss);
+}
+
+.boss__art .pixel-canvas {
+  border-color: #000;
+}
+
+.boss__art--final {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.boss__info {
+  flex: 1;
+  min-width: 240px;
+}
+
+.boss__title {
+  margin: 0 0 4px;
+  font-size: 20px;
+  color: var(--boss);
+}
+
+.boss__subtitle {
+  margin: 0 0 10px;
+  color: var(--muted);
+}
+
+.boss__rules ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.boss__toolkit {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.boss__kit-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  font-size: 12px;
+}
+
+.boss__kit-item[data-unlocked="false"] {
+  opacity: 0.6;
+}
+
+.boss__start {
+  margin-top: 12px;
+}
+
+.boss__hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+  position: sticky;
+  top: 44px;
+  z-index: 5;
+  border-color: var(--boss);
+}
+
+.boss__hud--hit {
+  animation: boss-hit 0.4s steps(4);
+}
+
+@keyframes boss-hit {
+  25% {
+    transform: translateX(-4px);
+    background: #f3dde3;
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.boss__status {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.boss__label {
+  display: inline-block;
+  min-width: 128px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.boss__hp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.boss__hp-bar {
+  display: flex;
+  gap: 3px;
+}
+
+.boss__hp-seg {
+  width: 38px;
+  height: 12px;
+  background: var(--boss);
+  border: var(--px) solid #000;
+}
+
+.boss__hp-seg[data-state="cleared"] {
+  background: var(--paper-deep);
+}
+
+.boss__hp-seg[data-state="current"] {
+  animation: blink 1s steps(2) infinite;
+}
+
+.boss__budget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.boss__hearts {
+  color: var(--bad);
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+.boss__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.boss__tool {
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+.boss__tool[data-used="true"] {
+  text-decoration: line-through;
+}
+
+.boss__phase-head {
+  justify-content: space-between;
+}
+
+.boss__phase-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.boss__reveals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.boss__reveal strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.boss__stage {
+  margin-top: 10px;
+}
+
+/* --- постмортем --- */
+
+.postmortem {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.postmortem__kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+.postmortem__title {
+  margin: 2px 0 8px;
+  font-size: 20px;
+}
+
+.postmortem__meta {
+  margin-bottom: 12px;
+}
+
+.postmortem__promotion {
+  background: #fff3cc;
+  border: var(--px) solid var(--warn);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.postmortem__promotion h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.postmortem__ladder {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.postmortem__ladder dt {
+  font-weight: bold;
+}
+
+.postmortem__ladder dd {
+  margin: 0;
+}
+
+.postmortem__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.postmortem__event {
+  display: grid;
+  grid-template-columns: 3.4em 1fr;
+  gap: 8px;
+  padding: 4px 6px;
+  border-left: 3px solid var(--paper-deep);
+  margin-bottom: 3px;
+  background: var(--paper-light);
+  font-size: 12px;
+}
+
+.postmortem__event[data-tone="bad"] {
+  border-left-color: var(--bad);
+}
+
+.postmortem__event[data-tone="good"] {
+  border-left-color: var(--good);
+}
+
+.postmortem__event[data-tone="warn"] {
+  border-left-color: var(--warn);
+}
+
+.postmortem__event[data-tone="info"] {
+  border-left-color: var(--info);
+}
+
+.postmortem__time {
+  color: var(--muted);
+}
+
+.postmortem__actions {
+  list-style: none;
+  padding-left: 4px;
+}
+
+.postmortem__staff {
+  background: #efe6f7;
+  border-left: 4px solid #7a4fb0;
+  padding: 8px 10px;
+}
+
+.postmortem__foot {
+  margin-top: 16px;
+}
+
+@media (max-width: 700px) {
+  .boss__hud {
+    position: static;
+  }
+
+  .postmortem__ladder {
+    grid-template-columns: 1fr;
+  }
+}

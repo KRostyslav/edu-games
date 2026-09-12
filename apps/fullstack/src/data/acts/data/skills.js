@@ -1,0 +1,51 @@
+/** Вузли дерева навичок акту «Дані». */
+export const SKILLS = [
+  {
+    id: "db-schema",
+    act: "data",
+    title: "Схема і SQL",
+    summary: "Обмеження, що не пускають сміття, JOIN без загублених рядків і віконні функції замість циклів у коді.",
+    levels: ["db-modeling", "db-joins", "db-window"],
+    topics: ["constraints", "sql-joins", "window-functions"],
+  },
+  {
+    id: "db-indexes",
+    act: "data",
+    title: "Індекси",
+    summary: "Індекс на вираз, складений індекс у правильному порядку колонок і план без Seq Scan там, де він шкодить.",
+    levels: ["db-index", "db-composite"],
+    topics: ["indexes-btree", "composite-indexes"],
+  },
+  {
+    id: "db-plans",
+    act: "data",
+    title: "Читати плани",
+    summary: "EXPLAIN ANALYZE як діагностика: оцінка проти факту, loops, buffers і статистика, що застаріла.",
+    levels: ["db-stale-stats", "db-index"],
+    topics: ["explain"],
+  },
+  {
+    id: "db-app",
+    act: "data",
+    title: "Застосунок і база",
+    summary: "Скільки запитів робить ваш ендпоінт і скільки з'єднань він тримає: N+1, пагінація, пул і PgBouncer.",
+    levels: ["db-n-plus-one", "db-pool"],
+    topics: ["n-plus-one", "connection-pooling"],
+  },
+  {
+    id: "db-isolation",
+    act: "data",
+    title: "Транзакції та ізоляція",
+    summary: "ACID, MVCC і рівні ізоляції Postgres: lost update, write skew і коли без ретраю не обійтися.",
+    levels: ["db-lost-update", "db-write-skew"],
+    topics: ["transactions-acid", "isolation-levels", "mvcc"],
+  },
+  {
+    id: "db-locks",
+    act: "data",
+    title: "Блокування й міграції",
+    summary: "Дедлоки, черга блокувань і зміни схеми на живій таблиці без жодної хвилини простою.",
+    levels: ["db-deadlock", "db-migration"],
+    topics: ["locks-deadlocks", "zero-downtime-migrations"],
+  },
+];

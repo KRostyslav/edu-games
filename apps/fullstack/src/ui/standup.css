@@ -1,0 +1,47 @@
+.standup__tabs {
+  margin-bottom: 12px;
+}
+
+.standup__meta {
+  margin-bottom: 10px;
+}
+
+.standup__session {
+  max-width: 760px;
+}
+
+.standup__topic {
+  margin: 6px 0;
+  padding-left: 0;
+}
+
+.standup__q {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 6px 0 10px;
+}
+
+.standup__move {
+  margin: 6px 0;
+  font-size: 12px;
+}
+
+.standup__topics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.standup__topic-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--paper-light);
+  border: var(--px) solid var(--shadow);
+  font-size: 12px;
+}
+
+.standup__group + .standup__group {
+  margin-top: 12px;
+}
